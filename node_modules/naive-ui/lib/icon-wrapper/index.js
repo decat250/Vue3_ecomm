@@ -1,0 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NIconWrapper = void 0;
+var IconWrapper_1 = require("./src/IconWrapper");
+Object.defineProperty(exports, "NIconWrapper", { enumerable: true, get: function () { return IconWrapper_1.NIconWrapper; } });
