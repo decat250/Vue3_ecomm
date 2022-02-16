@@ -1,0 +1,317 @@
+
+<template>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Navbar</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <router-link class="nav-link" to="/">首頁</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/about">About</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/test">test</router-link>
+          </li>
+        </ul>
+
+        <span
+          v-if="islogin"
+          class="navbar-text"
+          style="text-decoration: none; margin-right: 10px"
+        >
+          <router-link
+            v-if="islogin"
+            to="/Userinfo"
+            style="text-decoration: none"
+            >{{ account }}test</router-link
+          >
+        </span>
+
+        <span class="navbar-text" style="text-decoration: none">
+          <a
+            v-if="islogin"
+            to=""
+            style="text-decoration: none"
+            v-on:click="logout"
+            >登出</a
+          >
+        </span>
+
+        <span class="navbar-text" v-if="!islogin" style="text-decoration: none">
+          <a
+            style="text-decoration: none"
+            @click="showLoginModal = true"
+            v-if="!islogin"
+            >登入</a
+          >
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <n-modal v-model:show="showLoginModal" content="Are you sure?">
+    <n-card
+      style="width: 600px"
+      title=""
+      :bordered="false"
+      size="huge"
+      role="dialog"
+      aria-modal="true"
+    >
+      <n-tabs default-value="signin" size="large">
+        <n-tab-pane name="signin" tab="登入">
+          <n-form :model="loginformValue">
+            <n-form-item-row label="帳號">
+              <n-input
+                v-model:value="loginformValue.user.account"
+                placeholder="請輸入帳號"
+                clearable
+              />
+            </n-form-item-row>
+            <n-form-item-row label="密碼">
+              <n-input
+                v-model:value="loginformValue.user.password"
+                placeholder="請輸入密碼"
+                @keyup.enter="login"
+                type="password"
+                clearable
+              />
+            </n-form-item-row>
+          </n-form>
+          <n-button type="primary" block secondary strong v-on:click="login"
+            >登入
+          </n-button>
+        </n-tab-pane>
+
+        <n-tab-pane name="signup" tab="註冊帳號">
+          <n-form :model="signupformValue" ref="formRef" :rules="rules">
+            <n-form-item path="account" label="帳號">
+              <n-input
+                v-model:value="signupformValue.account"
+                placeholder="請輸入帳號"
+              />
+            </n-form-item>
+
+            <n-form-item path="name" label="姓名">
+              <n-input
+                v-model:value="signupformValue.name"
+                placeholder="請輸入姓名"
+              />
+            </n-form-item>
+
+            <n-form-item path="phone" label="電話">
+              <n-input
+                v-model:value="signupformValue.phone"
+                placeholder="請輸入電話"
+              />
+            </n-form-item>
+
+            <n-form-item path="email" label="信箱">
+              <n-input
+                v-model:value="signupformValue.email"
+                placeholder="請輸入信箱"
+              />
+            </n-form-item>
+
+            <n-form-item path="password" placeholder="請輸入密碼" label="密碼">
+              <n-input v-model:value="signupformValue.password" />
+            </n-form-item>
+
+            <n-form-item
+              path="reenteredPassword"
+              placeholder="請重新輸入密碼"
+              label="確認密碼"
+            >
+              <n-input v-model:value="signupformValue.reenteredPassword" />
+            </n-form-item>
+
+            <n-button type="primary" @click="signup()" block secondary strong
+              >註冊
+            </n-button>
+          </n-form>
+        </n-tab-pane>
+      </n-tabs>
+    </n-card>
+  </n-modal>
+</template>
+
+<script>
+import { defineComponent, ref } from "vue";
+import { useMessage } from "naive-ui";
+
+export default defineComponent({
+  name: "header",
+  components: {},
+  data() {
+    return {
+      islogin: false,
+    };
+  },
+  mounted() {
+    const isLogin = localStorage.getItem("account");
+
+    if (isLogin != null) {
+      this.islogin = true;
+      this.account = localStorage.getItem("account");
+    } else {
+      this.islogin = false;
+    }
+  },
+  setup() {
+    window.$message = useMessage();
+    const formRef = ref(null);
+    
+    return {
+      formRef,
+      showLoginModal: ref(false),
+      loginformValue: ref({
+        user: {
+          account: "",
+          password: "",
+        },
+      }),
+      signupformValue: ref({
+        account: "",
+        password: "",
+        reenteredPassword: "",
+        email: "",
+        phone: "",
+        age: "",
+      }),
+      rules: {
+        email: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+        ],
+        account: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+        ],
+        name: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+        ],
+        phone: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+        ],
+        password: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+        ],
+        reenteredPassword: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+          {
+            message: 'Password is not same as re-entered password!',
+            trigger: ['blur', 'password-input']
+          }
+        ],
+      },
+    };
+  },
+  methods: {
+    signup() {
+      this.formRef.validate((valid) => {
+        if (!valid) {
+          fetch("http://localhost/api/signup", {
+            method: "post",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              account: this.signupformValue.account,
+              password: this.signupformValue.password,
+              name: this.signupformValue.name,
+              phone: this.signupformValue.phone,
+              email: this.signupformValue.email,
+            }),
+          })
+            .then((data) => {
+              return data.json();
+            })
+            .then((ret) => {
+              if (ret.Status == "Success") {
+                window.$message.success(ret.Message);
+              } else {
+                window.$message.error(ret.Message);
+              }
+            });
+        } else {
+          return false;
+        }
+      });
+    },
+    logout() {
+      localStorage.removeItem("account");
+      this.islogin = false;
+      window.$message.success("您已登出");
+    },
+    login() {
+      fetch("http://127.0.0.1/api/signin", {
+        method: "post",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+
+        //make sure to serialize your JSON body
+        body: JSON.stringify({
+          account: this.loginformValue.user.account,
+          password: this.loginformValue.user.password,
+        }),
+      })
+        .then((data) => {
+          return data.json();
+        })
+        .then((ret) => {
+          console.log(ret);
+          if (ret.Status == "Success") {
+            this.showLoginModal = false;
+            this.islogin = true;
+            localStorage.setItem("account", ret.data[0]);
+            window.$message.success(ret.Message);
+            this.loginformValue.user.account = "";
+            this.loginformValue.user.password = "";
+          } else {
+            window.$message.error(ret.Message);
+          }
+          
+          console.log(this.showLoginModal);
+        });
+    },
+  },
+});
+</script>
