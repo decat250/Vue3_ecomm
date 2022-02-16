@@ -2,7 +2,7 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Navbar</a>
+      <router-link class="navbar-brand" to="/">Easy Shop</router-link>
       <button
         class="navbar-toggler"
         type="button"
