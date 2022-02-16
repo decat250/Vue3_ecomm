@@ -21,3 +21,16 @@ class tb_user(db.Model):
         self.User_password = User_password
         self.User_phone = User_phone
         self.User_email = User_email
+
+
+class tb_vaildcode(db.Model):
+    __tablename__ = 'tb_vaildcode'  # 是Database裡面的哪個Table
+
+    Vaildcode_id = db.Column(db.Integer, primary_key=True)
+    User_id = db.Column(db.Integer)
+    Vaildcode_code = db.Column(db.VARCHAR(10))
+
+    def __init__(self, Vaildcode_id, User_account, Vaildcode_code):
+        self.Vaildcode_id = Vaildcode_id
+        self.User_account = User_account
+        self.Vaildcode_code = Vaildcode_code

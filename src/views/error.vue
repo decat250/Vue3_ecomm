@@ -1,5 +1,5 @@
 <template>
-  page not found
+  頁面不存在
 </template>
 <script>
 

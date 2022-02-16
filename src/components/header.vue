@@ -20,7 +20,7 @@
             <router-link class="nav-link" to="/">首頁</router-link>
           </li>
           <li class="nav-item">
-            <router-link class="nav-link" to="/about">About</router-link>
+            <router-link class="nav-link" to="/Shopcart">購物車</router-link>
           </li>
           <li class="nav-item">
             <router-link class="nav-link" to="/test">test</router-link>
@@ -79,6 +79,7 @@
                 v-model:value="loginformValue.user.account"
                 placeholder="請輸入帳號"
                 clearable
+                @keyup.enter="login"
               />
             </n-form-item-row>
             <n-form-item-row label="密碼">
@@ -94,6 +95,73 @@
           <n-button type="primary" block secondary strong v-on:click="login"
             >登入
           </n-button>
+        </n-tab-pane>
+
+        <n-tab-pane name="forgetpassword" tab="忘記密碼">
+          <n-form :model="forgetformValuea" ref="formRef" :rules="rules">
+            <n-form-item path="account" label="帳號">
+              <n-input
+                v-model:value="forgetformValuea.account"
+                placeholder="請輸入帳號"
+              />
+            </n-form-item>
+            <n-form-item path="email" label="信箱">
+              <n-input
+                v-model:value="forgetformValuea.email"
+                placeholder="請輸入帳號"
+                @keyup.enter="sendvailed"
+              />
+            </n-form-item>
+
+            <n-button
+              type="primary"
+              @click="sendvailed()"
+              block
+              secondary
+              strong
+              :disabled="resetvaildbutton"
+              >送出驗證碼
+            </n-button>
+          </n-form>
+          <n-form :model="forgetformValueb" ref="formRef" :rules="rules">
+            <n-form-item
+              path="vaildcode"
+              label="驗證碼"
+              style="margin-top: 20px"
+            >
+              <n-input
+                v-model:value="forgetformValueb.vaildcode"
+                placeholder="請輸入驗證碼"
+                :disabled="resetvaildform"
+              />
+            </n-form-item>
+
+            <n-form-item path="vaildcode" label="密碼">
+              <n-input
+                v-model:value="forgetformValueb.password"
+                placeholder="請輸入新密碼"
+                :disabled="resetvaildform"
+              />
+            </n-form-item>
+
+            <n-form-item path="vaildcode" label="密碼確認">
+              <n-input
+                v-model:value="forgetformValueb.reenteredPassword"
+                placeholder="重新請輸入新密碼"
+                :disabled="resetvaildform"
+              />
+            </n-form-item>
+
+            <n-button
+              type="primary"
+              @click="resetpassword()"
+              block
+              secondary
+              strong
+              :disabled="resetvaildform"
+              >重設密碼
+            </n-button>
+          </n-form>
         </n-tab-pane>
 
         <n-tab-pane name="signup" tab="註冊帳號">
@@ -158,6 +226,9 @@ export default defineComponent({
   data() {
     return {
       islogin: false,
+      resetvaildbutton: false, //重設密碼按鈕是否可案
+      resetvaildform: true, //重設密碼欄位是否不可填寫
+      resetaccount: "0",
     };
   },
   mounted() {
@@ -173,7 +244,7 @@ export default defineComponent({
   setup() {
     window.$message = useMessage();
     const formRef = ref(null);
-    
+
     return {
       formRef,
       showLoginModal: ref(false),
@@ -190,6 +261,15 @@ export default defineComponent({
         email: "",
         phone: "",
         age: "",
+      }),
+      forgetformValuea: ref({
+        account: "",
+        email: "",
+      }),
+      forgetformValueb: ref({
+        vaildcode: "",
+        password: "",
+        reenteredPassword: "",
       }),
       rules: {
         email: [
@@ -234,14 +314,84 @@ export default defineComponent({
             trigger: ["input", "blur"],
           },
           {
-            message: 'Password is not same as re-entered password!',
-            trigger: ['blur', 'password-input']
-          }
+            message: "Password is not same as re-entered password!",
+            trigger: ["blur", "password-input"],
+          },
         ],
       },
     };
   },
   methods: {
+    resetpassword() {
+      this.formRef.validate((valid) => {
+        if (!valid) {
+          fetch("http://localhost/api/resetpwd", {
+            method: "post",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: this.resetaccount,
+              code: this.forgetformValueb.vaildcode,
+              password: this.forgetformValueb.password,
+            }),
+          })
+            .then((data) => {
+              return data.json();
+            })
+            .then((ret) => {
+              if (ret.Status == "Failed") {
+                window.$message.error(ret.Message);
+              } else {
+                this.forgetformValuea.email = "";
+                this.forgetformValuea.account = "";
+                this.forgetformValueb.vaildcode = "";
+                this.forgetformValueb.password = "";
+                this.forgetformValueb.reenteredPassword = "";
+                (this.resetvaildbutton = false), //重設密碼按鈕是否可案
+                  (this.esetvaildform = true), //重設密碼欄位是否不可填寫
+                  window.$message.success(ret.Message);
+              }
+            });
+        } else {
+          return false;
+        }
+      });
+    },
+    sendvailed() {
+      this.formRef.validate((valid) => {
+        if (!valid) {
+          this.resetvaildbutton = true;
+          fetch("http://localhost/api/resetpwdsendvaild", {
+            method: "post",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              account: this.forgetformValuea.account,
+              email: this.forgetformValuea.email,
+            }),
+          })
+            .then((data) => {
+              return data.json();
+            })
+            .then((ret) => {
+              if (ret.Status == "Failed") {
+                this.resetvaildbutton = false;
+                window.$message.error(ret.Message);
+              } else {
+                this.resetvaildform = false;
+                this.resetaccount = ret.id;
+                window.$message.success(ret.Message);
+              }
+            });
+        } else {
+          return false;
+        }
+      });
+    },
     signup() {
       this.formRef.validate((valid) => {
         if (!valid) {
@@ -308,7 +458,7 @@ export default defineComponent({
           } else {
             window.$message.error(ret.Message);
           }
-          
+
           console.log(this.showLoginModal);
         });
     },

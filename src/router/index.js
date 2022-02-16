@@ -47,8 +47,20 @@ const routes = [
     }
   },
   {
+    path: '/Shopcart',
+    name: 'Shopcart',
+    components: {
+      default: ()=> import( '../views/Shopcart.vue'),
+      nav: ()=> import( '../components/header.vue'),
+    }
+  },
+  {
     path: '/:catchAll(.*)',
-    component: () => import(/* webpackChunkName: "about" */ '../views/error.vue')
+    components: {
+      default: ()=> import( '../views/error.vue'),
+      nav: ()=> import( '../components/header.vue'),
+    }
+    //component: () => import('../views/error.vue')
   }
 
 ]
