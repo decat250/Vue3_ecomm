@@ -73,24 +73,27 @@
     >
       <n-tabs default-value="signin" size="large">
         <n-tab-pane name="signin" tab="登入">
-          <n-form :model="loginformValue">
-            <n-form-item-row label="帳號">
+          <n-form :model="loginformValue" ref="loginformref" :rules="rules">
+
+             <n-form-item path="account" label="帳號">
               <n-input
-                v-model:value="loginformValue.user.account"
+                v-model:value="loginformValue.account"
                 placeholder="請輸入帳號"
                 clearable
-                @keyup.enter="login"
               />
-            </n-form-item-row>
-            <n-form-item-row label="密碼">
+            </n-form-item>
+
+           <n-form-item path="password" label="密碼">
               <n-input
-                v-model:value="loginformValue.user.password"
+                v-model:value="loginformValue.password"
                 placeholder="請輸入密碼"
                 @keyup.enter="login"
                 type="password"
                 clearable
               />
-            </n-form-item-row>
+            </n-form-item>
+
+            
           </n-form>
           <n-button type="primary" block secondary strong v-on:click="login"
             >登入
@@ -98,7 +101,11 @@
         </n-tab-pane>
 
         <n-tab-pane name="forgetpassword" tab="忘記密碼">
-          <n-form :model="forgetformValuea" ref="formRef" :rules="rules">
+          <n-form
+            :model="forgetformValuea"
+            ref="forvaildformRef"
+            :rules="rules"
+          >
             <n-form-item path="account" label="帳號">
               <n-input
                 v-model:value="forgetformValuea.account"
@@ -123,7 +130,11 @@
               >送出驗證碼
             </n-button>
           </n-form>
-          <n-form :model="forgetformValueb" ref="formRef" :rules="rules">
+          <n-form
+            :model="forgetformValueb"
+            ref="formresetpasswordRef"
+            :rules="rules"
+          >
             <n-form-item
               path="vaildcode"
               label="驗證碼"
@@ -136,7 +147,7 @@
               />
             </n-form-item>
 
-            <n-form-item path="vaildcode" label="密碼">
+            <n-form-item path="password" label="密碼">
               <n-input
                 v-model:value="forgetformValueb.password"
                 placeholder="請輸入新密碼"
@@ -144,7 +155,7 @@
               />
             </n-form-item>
 
-            <n-form-item path="vaildcode" label="密碼確認">
+            <n-form-item path="reenteredPassword" label="密碼確認">
               <n-input
                 v-model:value="forgetformValueb.reenteredPassword"
                 placeholder="重新請輸入新密碼"
@@ -165,7 +176,7 @@
         </n-tab-pane>
 
         <n-tab-pane name="signup" tab="註冊帳號">
-          <n-form :model="signupformValue" ref="formRef" :rules="rules">
+          <n-form :model="signupformValue" ref="signupformRef" :rules="rules">
             <n-form-item path="account" label="帳號">
               <n-input
                 v-model:value="signupformValue.account"
@@ -243,16 +254,20 @@ export default defineComponent({
   },
   setup() {
     window.$message = useMessage();
-    const formRef = ref(null);
+    const signupformRef = ref(null); //註冊帳號
+    const forvaildformRef = ref(null); //忘記密碼驗證碼表單
+    const formresetpasswordRef = ref(null); //重設密碼
+    const loginformref = ref(null); //登入表單
 
     return {
-      formRef,
+      loginformref,
+      signupformRef,
+      forvaildformRef,
+      formresetpasswordRef,
       showLoginModal: ref(false),
       loginformValue: ref({
-        user: {
           account: "",
           password: "",
-        },
       }),
       signupformValue: ref({
         account: "",
@@ -318,12 +333,19 @@ export default defineComponent({
             trigger: ["blur", "password-input"],
           },
         ],
+        vaildcode: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+        ],
       },
     };
   },
   methods: {
     resetpassword() {
-      this.formRef.validate((valid) => {
+      this.formresetpasswordRef.validate((valid) => {
         if (!valid) {
           fetch("http://localhost/api/resetpwd", {
             method: "post",
@@ -349,9 +371,9 @@ export default defineComponent({
                 this.forgetformValueb.vaildcode = "";
                 this.forgetformValueb.password = "";
                 this.forgetformValueb.reenteredPassword = "";
-                (this.resetvaildbutton = false), //重設密碼按鈕是否可案
-                  (this.esetvaildform = true), //重設密碼欄位是否不可填寫
-                  window.$message.success(ret.Message);
+                this.resetvaildbutton = false; //重設密碼按鈕是否可案
+                this.resetvaildform = true; //重設密碼欄位是否不可填寫
+                window.$message.success(ret.Message);
               }
             });
         } else {
@@ -360,7 +382,7 @@ export default defineComponent({
       });
     },
     sendvailed() {
-      this.formRef.validate((valid) => {
+      this.forvaildformRef.validate((valid) => {
         if (!valid) {
           this.resetvaildbutton = true;
           fetch("http://localhost/api/resetpwdsendvaild", {
@@ -393,7 +415,8 @@ export default defineComponent({
       });
     },
     signup() {
-      this.formRef.validate((valid) => {
+      //註冊帳號
+      this.signupformRef.validate((valid) => {
         if (!valid) {
           fetch("http://localhost/api/signup", {
             method: "post",
@@ -430,37 +453,38 @@ export default defineComponent({
       window.$message.success("您已登出");
     },
     login() {
-      fetch("http://127.0.0.1/api/signin", {
-        method: "post",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-
-        //make sure to serialize your JSON body
-        body: JSON.stringify({
-          account: this.loginformValue.user.account,
-          password: this.loginformValue.user.password,
-        }),
-      })
-        .then((data) => {
-          return data.json();
-        })
-        .then((ret) => {
-          console.log(ret);
-          if (ret.Status == "Success") {
-            this.showLoginModal = false;
-            this.islogin = true;
-            localStorage.setItem("account", ret.data[0]);
-            window.$message.success(ret.Message);
-            this.loginformValue.user.account = "";
-            this.loginformValue.user.password = "";
-          } else {
-            window.$message.error(ret.Message);
-          }
-
-          console.log(this.showLoginModal);
-        });
+      this.loginformref.validate((valid) => {
+        if (!valid) {
+          fetch("http://127.0.0.1/api/signin", {
+            method: "post",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              account: this.loginformValue.account,
+              password: this.loginformValue.password,
+            }),
+          })
+            .then((data) => {
+              return data.json();
+            })
+            .then((ret) => {
+              if (ret.Status == "Success") {
+                this.showLoginModal = false;
+                this.islogin = true;
+                localStorage.setItem("account", ret.data[0]);
+                window.$message.success(ret.Message);
+                this.loginformValue.account = "";
+                this.loginformValue.password = "";
+              } else {
+                window.$message.error(ret.Message);
+              }
+            });
+        } else {
+          return false;
+        }
+      });
     },
   },
 });
