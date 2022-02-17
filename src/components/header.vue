@@ -74,8 +74,7 @@
       <n-tabs default-value="signin" size="large">
         <n-tab-pane name="signin" tab="登入">
           <n-form :model="loginformValue" ref="loginformref" :rules="rules">
-
-             <n-form-item path="account" label="帳號">
+            <n-form-item path="account" label="帳號">
               <n-input
                 v-model:value="loginformValue.account"
                 placeholder="請輸入帳號"
@@ -83,7 +82,7 @@
               />
             </n-form-item>
 
-           <n-form-item path="password" label="密碼">
+            <n-form-item path="password" label="密碼">
               <n-input
                 v-model:value="loginformValue.password"
                 placeholder="請輸入密碼"
@@ -92,8 +91,6 @@
                 clearable
               />
             </n-form-item>
-
-            
           </n-form>
           <n-button type="primary" block secondary strong v-on:click="login"
             >登入
@@ -114,8 +111,9 @@
             </n-form-item>
             <n-form-item path="email" label="信箱">
               <n-input
+                type="email"
                 v-model:value="forgetformValuea.email"
-                placeholder="請輸入帳號"
+                placeholder="請輸入信箱"
                 @keyup.enter="sendvailed"
               />
             </n-form-item>
@@ -149,16 +147,18 @@
 
             <n-form-item path="password" label="密碼">
               <n-input
+                type="password"
                 v-model:value="forgetformValueb.password"
                 placeholder="請輸入新密碼"
                 :disabled="resetvaildform"
               />
             </n-form-item>
 
-            <n-form-item path="reenteredPassword" label="密碼確認">
+            <n-form-item path="forreenteredPassword" label="密碼確認">
               <n-input
+                type="password"
                 v-model:value="forgetformValueb.reenteredPassword"
-                placeholder="重新請輸入新密碼"
+                placeholder="請重新輸入新密碼"
                 :disabled="resetvaildform"
               />
             </n-form-item>
@@ -205,16 +205,25 @@
               />
             </n-form-item>
 
+
+
+            
             <n-form-item path="password" placeholder="請輸入密碼" label="密碼">
-              <n-input v-model:value="signupformValue.password" />
+              <n-input
+                v-model:value="signupformValue.password"
+                type="password"
+              />
             </n-form-item>
 
             <n-form-item
-              path="reenteredPassword"
+              path="signupreenteredPassword"
               placeholder="請重新輸入密碼"
               label="確認密碼"
             >
-              <n-input v-model:value="signupformValue.reenteredPassword" />
+              <n-input
+                type="password"
+                v-model:value="signupformValue.signupreenteredPassword"
+              />
             </n-form-item>
 
             <n-button type="primary" @click="signup()" block secondary strong
@@ -235,44 +244,44 @@ export default defineComponent({
   name: "header",
   components: {},
   data() {
+    const vailedemail = (rules, value) => {
+      //eslint-disable-next-line
+      if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(value)) {
+        return true
+      } else {
+        return false
+      }
+    };
+    const forformsamepassword = (rules, value) => {
+      if (this.signupformValue.password === value) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+    //註冊畫面密碼驗證
+    const signupformsamepassword = (rules, value) => {
+      console.log(value);
+      if (this.signupformValue.password === value) {
+        return true;
+      } else {
+        return false;
+      }
+    };
     return {
       islogin: false,
       resetvaildbutton: false, //重設密碼按鈕是否可案
       resetvaildform: true, //重設密碼欄位是否不可填寫
       resetaccount: "0",
-    };
-  },
-  mounted() {
-    const isLogin = localStorage.getItem("account");
-
-    if (isLogin != null) {
-      this.islogin = true;
-      this.account = localStorage.getItem("account");
-    } else {
-      this.islogin = false;
-    }
-  },
-  setup() {
-    window.$message = useMessage();
-    const signupformRef = ref(null); //註冊帳號
-    const forvaildformRef = ref(null); //忘記密碼驗證碼表單
-    const formresetpasswordRef = ref(null); //重設密碼
-    const loginformref = ref(null); //登入表單
-
-    return {
-      loginformref,
-      signupformRef,
-      forvaildformRef,
-      formresetpasswordRef,
-      showLoginModal: ref(false),
       loginformValue: ref({
-          account: "",
-          password: "",
+        account: "",
+        password: "",
       }),
       signupformValue: ref({
         account: "",
         password: "",
-        reenteredPassword: "",
+        signupreenteredPassword: "",
+        code:"",
         email: "",
         phone: "",
         age: "",
@@ -292,6 +301,11 @@ export default defineComponent({
             required: true,
             message: "這是必填欄位",
             trigger: ["input", "blur"],
+          },
+          {
+            validator: vailedemail,
+            message: "信箱格式不正確",
+            trigger: ["blur", "password-input"],
           },
         ],
         account: [
@@ -322,13 +336,26 @@ export default defineComponent({
             trigger: ["input", "blur"],
           },
         ],
-        reenteredPassword: [
+        forreenteredPassword: [
           {
             required: true,
             message: "這是必填欄位",
             trigger: ["input", "blur"],
           },
           {
+            validator: forformsamepassword,
+            message: "Password is not same as re-entered password!",
+            trigger: ["blur", "password-input"],
+          },
+        ],
+        signupreenteredPassword: [
+          {
+            required: true,
+            message: "這是必填欄位",
+            trigger: ["input", "blur"],
+          },
+          {
+            validator: signupformsamepassword,
             message: "Password is not same as re-entered password!",
             trigger: ["blur", "password-input"],
           },
@@ -341,6 +368,31 @@ export default defineComponent({
           },
         ],
       },
+    };
+  },
+  mounted() {
+    const isLogin = localStorage.getItem("account");
+
+    if (isLogin != null) {
+      this.islogin = true;
+      this.account = localStorage.getItem("account");
+    } else {
+      this.islogin = false;
+    }
+  },
+  setup() {
+    window.$message = useMessage();
+    const signupformRef = ref(null); //註冊帳號
+    const forvaildformRef = ref(null); //忘記密碼驗證碼表單
+    const formresetpasswordRef = ref(null); //重設密碼
+    const loginformref = ref(null); //登入表單
+
+    return {
+      loginformref,
+      signupformRef,
+      forvaildformRef,
+      formresetpasswordRef,
+      showLoginModal: ref(false),
     };
   },
   methods: {
@@ -437,6 +489,12 @@ export default defineComponent({
             })
             .then((ret) => {
               if (ret.Status == "Success") {
+                this.signupformValue.account=""
+                this.signupformValue.password=""
+                this.signupformValue.name=""
+                this.signupformValue.phone=""
+                this.signupformValue.email=""
+
                 window.$message.success(ret.Message);
               } else {
                 window.$message.error(ret.Message);
