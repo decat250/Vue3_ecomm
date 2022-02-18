@@ -63,11 +63,23 @@
 export default {
 
   mounted() {
-    
+    fetch("http://127.0.0.1/api/getproductinfo", {
+            method: "post",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          })
+            .then((data) => {
+              return data.json();
+            })
+            .then((ret) => {
+              console.log(ret)
+            });
   },
   data() {
     return {
-     
+      
     };
   },
 };
