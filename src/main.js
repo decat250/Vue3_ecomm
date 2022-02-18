@@ -9,7 +9,7 @@ import 'vfonts/Lato.css'
 
 import "bootstrap"
 
-  
+import "ecpay_aio_nodejs"
 
 const app = createApp(App)
 /*

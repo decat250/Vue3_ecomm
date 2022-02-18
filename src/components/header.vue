@@ -204,9 +204,6 @@
                 placeholder="請輸入信箱"
               />
             </n-form-item>
-
-
-
             
             <n-form-item path="password" placeholder="請輸入密碼" label="密碼">
               <n-input
