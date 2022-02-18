@@ -36,7 +36,7 @@
                   block
                   secondary
                   strong
-                  v-on:click="login"
+                  v-on:click="addtocard"
                   >加入購物車
                 </n-button>
               </div>
@@ -84,7 +84,9 @@ export default defineComponent({
         product_describe: "",
         num: [],
         opt: [],
-      },
+        selnum:"", //使用者選擇數量
+        selopt:"" // 使用者選擇規則
+       },
     };
   },
   mounted() {
@@ -105,12 +107,18 @@ export default defineComponent({
         this.productdata.product_img = ret.productdata.product_img;
         this.productdata.product_describe = ret.productdata.product_describe;
         
-        
+
         this.productdata.opt = ret.productdata.opt;
         this.productdata.num = ret.productdata.num;
       });
-
-    console.log();
   },
+  methods:
+  {
+    addtocard()
+    {
+      console.log(this.selopt)
+      console.log(this.selnum)
+    }
+  }
 });
 </script>

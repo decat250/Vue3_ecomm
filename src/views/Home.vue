@@ -141,8 +141,7 @@ export default defineComponent({
       ],
     };
   },
-  setup() {
-    
+  setup() { 
     return {
       menuOptions,
       renderMenuLabel(option) {
