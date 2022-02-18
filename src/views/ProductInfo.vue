@@ -1,5 +1,7 @@
 <template>
   <div class="container">
+    123
+    {{ $route.params.id }}
     <div class="row">
       <div class="col-6">
         <img

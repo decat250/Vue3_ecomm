@@ -11,6 +11,7 @@ import "bootstrap"
 
 import "ecpay_aio_nodejs"
 
+
 const app = createApp(App)
 /*
 router.beforeEach((to, from, next)=>{

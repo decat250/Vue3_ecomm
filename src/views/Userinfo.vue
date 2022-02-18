@@ -47,25 +47,27 @@
               </n-form>
             </n-tab-pane>
             <n-tab-pane name="the beatles" tab="購買記錄">
-              Hey Jude
+              <div role="tw-city-selector"></div>
+
             </n-tab-pane>
             <n-tab-pane name="jay chou" tab="Jay Chou"> Qilixiang </n-tab-pane>
           </n-tabs>
         </n-card>
+        
       </div>
     </div>
   </div>
 </template>
 <script>
+
 export default {
+
   mounted() {
-    const isLogin = localStorage.getItem("account");
-    this.userName = isLogin;
+    
   },
   data() {
     return {
-      userName: "Steven Chou",
-      userId: 9527,
+     
     };
   },
 };

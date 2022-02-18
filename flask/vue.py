@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # https://ithelp.ithome.com.tw/articles/10202886
+import os
+from werkzeug.utils import secure_filename
 
 from flask import Flask, request
 from flask_restful import Api, Resource, reqparse, abort
@@ -12,6 +14,7 @@ from database.api import login
 from database.api import newaccount
 from database.api import sendvaildresetpwd
 from database.api import pwdreset
+from database.api import productgetlist
 #app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 
 #這就是app名稱
@@ -23,7 +26,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from flask_cors import CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
-
 
 #API
 @app.route("/api/signin",methods=['POST'])
@@ -114,6 +116,17 @@ def resetpwd(): #重設密碼
         return {"Status":"Failed", "Return": str(e)}
 
 
+@app.route('/api/getproductlist', methods=['GET'])
+def getproductlist():
+    try:
+        r = productgetlist()#呼叫自己寫的函數來處理，Class login放在database/api裡面
+        return r
+
+    except Exception as e:
+        return {"Status":"Failed", "Return": str(e)}
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
     
+    app.run(debug=True)
+  

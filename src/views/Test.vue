@@ -1,140 +1,49 @@
 <template>
-  <n-radio-group
-    v-model:value="size"
-    name="left-size"
-    style="margin-bottom: 12px;"
+  <n-button
+    :disabled="!fileListLength"
+    @click="handleClick"
+    style="margin-bottom: 12px"
   >
-    <n-radio-button value="small">Small</n-radio-button>
-    <n-radio-button value="medium">Medium</n-radio-button>
-    <n-radio-button value="large">Large</n-radio-button>
-  </n-radio-group>
-  <n-form
-    :model="model"
-    :rules="rules"
-    :size="size"
-    ref="formRef"
-    label-placement="top"
+    Upload File
+  </n-button>
+  <n-upload
+    @change="handleChange"
+    action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f"
+    :default-upload="false"
+    multiple
+    ref="upload"
   >
-    <n-grid :span="24" :x-gap="24">
-      <n-form-item-gi :span="12" label="Input" path="inputValue">
-        <n-input placeholder="Input" v-model:value="model.inputValue" />
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Textarea" path="textareaValue">
-        <n-input
-          placeholder="Textarea"
-          v-model:value="model.textareaValue"
-          type="textarea"
-          :autosize="{
-            minRows: 3,
-            maxRows: 5
-          }"
-        />
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Select" path="selectValue">
-        <n-select
-          placeholder="Select"
-          :options="generalOptions"
-          v-model:value="model.selectValue"
-        />
-      </n-form-item-gi>
-      <n-form-item-gi
-        :span="12"
-        label="Multiple Select"
-        path="multipleSelectValue"
-      >
-        <n-select
-          placeholder="Select"
-          :options="generalOptions"
-          v-model:value="model.multipleSelectValue"
-          multiple
-        />
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Datetime" path="datetimeValue">
-        <n-date-picker type="datetime" v-model:value="model.datetimeValue" />
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Switch" path="switchValue">
-        <n-switch v-model:value="model.switchValue" />
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Checkbox Group" path="checkboxGroupValue">
-        <n-checkbox-group v-model:value="model.checkboxGroupValue">
-          <n-space>
-            <n-checkbox value="Option 1">Option 1</n-checkbox>
-            <n-checkbox value="Option 2">Option 2</n-checkbox>
-            <n-checkbox value="Option 3">Option 3</n-checkbox>
-          </n-space>
-        </n-checkbox-group>
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Radio Group" path="radioGroupValue">
-        <n-radio-group v-model:value="model.radioGroupValue" name="radiogroup1">
-          <n-space>
-            <n-radio value="Radio 1">Radio 1</n-radio>
-            <n-radio value="Radio 2">Radio 2</n-radio>
-            <n-radio value="Radio 3">Radio 3</n-radio>
-          </n-space>
-        </n-radio-group>
-      </n-form-item-gi>
-      <n-form-item-gi
-        :span="12"
-        label="Radio Button Group"
-        path="radioGroupValue"
-      >
-        <n-radio-group v-model:value="model.radioGroupValue" name="radiogroup2">
-          <n-radio-button value="Radio 1">Radio 1</n-radio-button>
-          <n-radio-button value="Radio 2">Radio 2</n-radio-button>
-          <n-radio-button value="Radio 3">Radio 3</n-radio-button>
-        </n-radio-group>
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Input Number" path="inputNumberValue">
-        <n-input-number v-model:value="model.inputNumberValue" />
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Time Picker" path="timePickerValue">
-        <n-time-picker v-model:value="model.timePickerValue" />
-      </n-form-item-gi>
-      <n-form-item-gi :span="12" label="Slider" path="sliderValue">
-        <n-slider v-model:value="model.sliderValue" :step="5" />
-      </n-form-item-gi>
-      <n-form-item-gi :span="14" label="Transfer" path="transferValue">
-        <n-transfer
-          style="width: 100%;"
-          v-model:value="model.transferValue"
-          :options="generalOptions"
-        />
-      </n-form-item-gi>
-      <n-form-item-gi :span="5" label="Nested Path" path="nestedValue.path1">
-        <n-cascader
-          placeholder="Nested Path 1"
-          v-model:value="model.nestedValue.path1"
-          :options="cascaderOptions"
-        />
-      </n-form-item-gi>
-      <n-form-item-gi :span="5" path="nestedValue.path2">
-        <n-select
-          placeholder="Nested Path 2"
-          :options="generalOptions"
-          v-model:value="model.nestedValue.path2"
-        />
-      </n-form-item-gi>
-      <n-gi :span="24">
-        <div style="display: flex; justify-content: flex-end;">
-          <n-button @click="handleValidateButtonClick" round type="primary">
-            Validate
-          </n-button>
-        </div>
-      </n-gi>
-    </n-grid>
-  </n-form>
-
-  <pre>
-  {{  JSON.stringify(model, 0, 2) }}
-  </pre>
+    <n-button>Select File</n-button>
+  </n-upload>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from "vue";
+import axios from 'axios'
 
 export default defineComponent({
-  setup () {
-    
-  }
-})
+  setup() {
+    const fileListLengthRef = ref(0);
+    const uploadRef = ref(null);
+
+    return {
+      upload: uploadRef,
+      fileListLength: fileListLengthRef,
+      handleChange({ fileList }) {
+        fileListLengthRef.value = fileList.length;
+      },
+      handleClick(param) {
+        let fileObj = param.file;
+        let form = new FormData();
+        form.append("fileToUpload", fileObj);
+        console.log(form); // output is: FormData {}; 需要使用 .get() 来读取
+        console.log(form.get("fileToUpload")); // output is exactly the fileObj
+
+        axios.post("http://127.0.0.1/api/uploadFile", form, {
+          headers: { "content-type": "multipart/form-data" },
+        });
+      },
+    };
+  },
+});
 </script>

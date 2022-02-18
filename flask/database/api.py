@@ -127,3 +127,11 @@ def pwdreset(id,code,password) :
         result = db.engine.execute(sql)
 
         return {"Status":"Success" , "Message": "密碼已修改"}
+
+def productgetlist(): #首頁取得商品
+    sql = text('select * from tb_product')
+    result = db.engine.execute(sql)
+    data=[]
+    for row in result:
+        data.append({"product_id":str(row[0]),"product_name":str(row[1]),"product_price":str(row[2]),"product_count":str(row[3]),"product_img":str(row[4])})
+    return {"Status":"Success" , "productlist": data}
