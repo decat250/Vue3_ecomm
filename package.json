@@ -16,12 +16,14 @@
     "ecpay_aio_nodejs": "^1.0.1",
     "firebase": "^9.6.6",
     "jssha": "^3.2.0",
-    "lingallery": "^1.3.7",
     "naive-ui": "^2.25.1",
     "tw-city-selector": "^2.1.1",
     "vue": "^3.0.0",
+    "vue-file-selector": "^0.6.0",
     "vue-router": "^4.0.12",
+    "vue-upload-drop-images": "^1.0.7",
     "vue3-editor": "^0.1.0-alpha.3",
+    "vue3-picture-swipe": "^3.0.5",
     "vuex": "^4.0.2"
   },
   "devDependencies": {

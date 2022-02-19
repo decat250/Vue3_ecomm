@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 # https://ithelp.ithome.com.tw/articles/10202886
 from flask_cors import CORS
-import imp
 from multiprocessing.spawn import import_main_path
 import os
-from werkzeug.utils import secure_filename
-
-from flask import Flask, request
+import random
+from flask import Flask, request, jsonify, redirect, flash, url_for, render_template
 from flask_restful import Api, Resource, reqparse, abort
 
 # 我把api的處理都放在database/database.py 用來建立連線
@@ -139,7 +137,7 @@ def getproductlist():
 
 @app.route('/api/getproductinfo/<id>', methods=['GET'])  # 商品資訊頁取得商品內容
 def getproductinfo(id):
-    
+
     try:
         r = infogetproduct(id)
         return r
@@ -147,7 +145,52 @@ def getproductinfo(id):
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
+ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+@app.route('/api/upload_file', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = (file.filename.split(".")[1])
+            #filename = secure_filename(file.filename)
+            newfilename = createRandomString(20)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                                   newfilename+"."+filename.split(".")[0]))
+            return newfilename
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="" method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value=Upload>
+    </form>
+    '''
+
+def createRandomString(len):
+    print ('wet'.center(10,'*'))
+    raw = ""
+    range1 = range(58, 65) # between 0~9 and A~Z
+    range2 = range(91, 97) # between A~Z and a~z
+
+    i = 0
+    while i < len:
+        seed = random.randint(48, 122)
+        if ((seed in range1) or (seed in range2)):
+            continue;
+        raw += chr(seed);
+        i += 1
+    # print(raw)
+    return raw
 
 if __name__ == '__main__':
-
+    app.config['UPLOAD_FOLDER'] = "/opt/homebrew/var/www/shop/image"
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     app.run(debug=True)

@@ -147,13 +147,20 @@ def infogetproduct(id): #商品頁取得內容
         data["product_id"]=str(row[0])
         data['product_name']=str(row[1])
         data['product_price']=str(row[2])
-        data['product_count']=str(row[3])
-        data['product_img']=str(row[4])
+        data['product_count']=str(row[3])        
         data['product_describe']=str(row[5])
         for i in range(int(row[3])):
             num.append({"label":str(i+1),"value":str(i+1)})
 
     data["num"]=num
+
+    sql = text('select * from tb_product_img where product_id="'+str(id)+'"')
+    result = db.engine.execute(sql)
+    img=[]
+    for row in result:
+        img.append({"id":row[1],"src":row[2]})
+    data['product_img']=img
+
     sql = text('select * from tb_product_opt where product_id="'+str(id)+'"')
     result = db.engine.execute(sql)
     opt=[]

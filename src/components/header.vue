@@ -222,7 +222,7 @@
                 v-model:value="signupformValue.signupreenteredPassword"
               />
             </n-form-item>
-
+            
             <n-button type="primary" @click="signup()" block secondary strong
               >註冊
             </n-button>
@@ -258,7 +258,6 @@ export default defineComponent({
     };
     //註冊畫面密碼驗證
     const signupformsamepassword = (rules, value) => {
-      console.log(value);
       if (this.signupformValue.password === value) {
         return true;
       } else {
