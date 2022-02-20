@@ -145,50 +145,50 @@ def getproductinfo(id):
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
-ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'gif'])
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @app.route('/api/upload_file', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = (file.filename.split(".")[1])
+        print(request.files)
+        file = request.files.getlist("file[]")
+        out=[]
+        for files in file:
+            print(files.filename)
+            filename = (files.filename.split(".")[1])
             #filename = secure_filename(file.filename)
             newfilename = createRandomString(20)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                                   newfilename+"."+filename.split(".")[0]))
-            return newfilename
+            out.append(newfilename+"."+filename.split(".")[0])
+            files.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                                    newfilename+"."+filename.split(".")[0]))
+        return {"Status":"Success","ImageData":out}
     return '''
     <!doctype html>
     <title>Upload new File</title>
     <h1>Upload new File</h1>
-    <form action="" method=post enctype=multipart/form-data>
-      <p><input type=file name=file>
+    <form action="" enctype="multipart/form-data" method=post enctype=multipart/form-data>
+      <p><input type=file name=file[] multiple="">
          <input type=submit value=Upload>
     </form>
     '''
 
+
 def createRandomString(len):
-    print ('wet'.center(10,'*'))
+    print('wet'.center(10, '*'))
     raw = ""
-    range1 = range(58, 65) # between 0~9 and A~Z
-    range2 = range(91, 97) # between A~Z and a~z
+    range1 = range(58, 65)  # between 0~9 and A~Z
+    range2 = range(91, 97)  # between A~Z and a~z
 
     i = 0
     while i < len:
         seed = random.randint(48, 122)
         if ((seed in range1) or (seed in range2)):
-            continue;
-        raw += chr(seed);
+            continue
+        raw += chr(seed)
         i += 1
     # print(raw)
     return raw
+
 
 if __name__ == '__main__':
     app.config['UPLOAD_FOLDER'] = "/opt/homebrew/var/www/shop/image"

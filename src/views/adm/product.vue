@@ -27,7 +27,7 @@
             type=""
           />
         </n-form-item>
-        {{fileList}}
+        {{ fileList }}
         <div class="row">
           <n-form-item class="col-6" path="product_price" label="價格">
             <n-input-number
@@ -46,15 +46,39 @@
           </n-form-item>
         </div>
         <hr />
-        <n-upload
-         @finish="handleFinish"
-          action="http://localhost/api/upload_file"
-          :default-file-list="fileList"
-          list-type="image-card"
-        >
-          Click to Upload
-        </n-upload>
 
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          @change="previewMultiImage"
+          class="form-control-file"
+          id="my-file"
+          ref="fileInput"
+        />
+        <div class="container testimonial-group" style="margin-top: 10px">
+          <div class="row text-center">
+            <div
+              class="col-4"
+              v-for="(item, index) in preview_list"
+              :key="index"
+            >
+              <img
+                :src="item"
+                class="img-fluid"
+                v-on:click="clicking($event)"
+                ref="referenceMe"
+                style="max-width: 100px"
+              />
+              <p class="mb-0">file name: {{ image_list[index].name }}</p>
+              <n-button type="error" v-on:click="deleteimg(index)">
+                刪除
+              </n-button>
+            </div>
+          </div>
+        </div>
+
+        <hr />
         商品描述
         <vue-editor v-model="content" />
         {{ content }}
@@ -75,11 +99,21 @@
     </n-card>
   </n-modal>
 </template>
-
+<style>
+.testimonial-group > .row {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.testimonial-group > .row > .col-4 {
+  display: inline-block;
+}
+</style>
 <script>
 import { h, defineComponent, ref } from "vue";
 import { NButton, useMessage } from "naive-ui";
 import { VueEditor } from "vue3-editor";
+//import axios from "axios";
 const createColumns = ({ play }) => {
   return [
     {
@@ -126,11 +160,7 @@ export default defineComponent({
     const formRef = ref(null);
     const rPasswordFormItemRef = ref(null);
     const modelRef = ref({});
-    const handleFinish = ({  event }) => {
-      console.log("123")
-      console.log(event.target.response)
-      this.fileList=[]
-    }
+
     return {
       showModal: ref(false),
       columns: createColumns({
@@ -139,26 +169,21 @@ export default defineComponent({
           message.info(`Play ${row.product_id}`);
         },
       }),
-      handleFinish,
       pagination: { pageSize: 10 },
       formRef,
       rPasswordFormItemRef,
       model: modelRef,
       rules: {},
-      fileList: [    
-        {
-          id: "c",
-          name: "我是自带url的图片.png",
-          status: "finished",
-          url: "https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg",
-        },
-      ],
     };
   },
   data() {
     return {
       content: "<h1>Some initial content</h1>",
       productlist: [],
+      preview: "",
+      image_list: [],
+      preview_list: [],
+      imagesArray: null,
     };
   },
   mounted() {
@@ -171,6 +196,75 @@ export default defineComponent({
       .then((ret) => {
         this.productlist = ret.productlist;
       });
+  },
+  methods: {
+    deleteimg(index) {
+      /*
+      var arr = ["shift", "splice", "filter", "pop"];
+
+      var spliced = arr.splice(2, 1);
+      
+
+      console.log(arr)
+      console.log(spliced)
+      */
+      console.log(this.imagesArray);
+      console.log(index);
+
+      
+    },
+    previewMultiImage: function (event) {
+      this.imagesArray = event.target.files;
+
+      var input = event.target;
+      var count = input.files.length;
+      var index = 0;
+
+      if (input.files) {
+        while (count--) {
+          var reader = new FileReader();
+          reader.onload = (e) => {
+            this.preview_list.push(e.target.result);
+          };
+          this.image_list.push(input.files[index]);
+          reader.readAsDataURL(input.files[index]);
+          index++;
+        }
+      }
+    },
+    newproduct() {
+      const formData = new FormData();
+      for (const i of Object.keys(this.imagesArray)) {
+        formData.append("file[]", this.imagesArray[i]);
+      }
+      /*
+      axios
+        .post("http://localhost/api/upload_file", formData, {})
+        .then((res) => {
+          console.log(res);
+        });
+
+    
+      /*
+      fetch("http://localhost/api/upload_file", {
+        method: "post",
+        body: data,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+     */
+      fetch("http://localhost/api/upload_file", {
+        method: "POST",
+        body: formData,
+      })
+        .then((data) => {
+          return data.json();
+        })
+        .then((ret) => {
+          console.log(ret);
+        });
+    },
   },
 });
 </script>
