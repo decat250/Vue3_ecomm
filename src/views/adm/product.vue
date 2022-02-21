@@ -55,7 +55,11 @@
           class="form-control-file"
           id="my-file"
           ref="fileInput"
+          style="display: none"
         />
+        <n-button type="primary" onclick="document.getElementById('my-file').click();">瀏覽檔案 </n-button>
+        
+
         <div class="container testimonial-group" style="margin-top: 10px">
           <div class="row text-center">
             <div
@@ -67,7 +71,6 @@
                 :src="item"
                 class="img-fluid"
                 v-on:click="clicking($event)"
-                ref="referenceMe"
                 style="max-width: 100px"
               />
               <p class="mb-0">file name: {{ image_list[index].name }}</p>
@@ -108,12 +111,27 @@
 .testimonial-group > .row > .col-4 {
   display: inline-block;
 }
+.btn-file input[type="file"] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 100%;
+  min-height: 100%;
+  font-size: 100px;
+  text-align: right;
+  filter: alpha(opacity=0);
+  opacity: 0;
+  outline: none;
+  background: white;
+  cursor: inherit;
+  display: block;
+}
 </style>
 <script>
 import { h, defineComponent, ref } from "vue";
 import { NButton, useMessage } from "naive-ui";
 import { VueEditor } from "vue3-editor";
-//import axios from "axios";
+import axios from "axios";
 const createColumns = ({ play }) => {
   return [
     {
@@ -199,22 +217,11 @@ export default defineComponent({
   },
   methods: {
     deleteimg(index) {
-      /*
-      var arr = ["shift", "splice", "filter", "pop"];
-
-      var spliced = arr.splice(2, 1);
-      
-
-      console.log(arr)
-      console.log(spliced)
-      */
-      console.log(this.imagesArray);
-      console.log(index);
-
-      
+      this.preview_list.splice(index, 1);
+      this.image_list.splice(index, 1);
     },
     previewMultiImage: function (event) {
-      this.imagesArray = event.target.files;
+      //this.imagesArray = event.target.files;
 
       var input = event.target;
       var count = input.files.length;
@@ -234,17 +241,17 @@ export default defineComponent({
     },
     newproduct() {
       const formData = new FormData();
-      for (const i of Object.keys(this.imagesArray)) {
-        formData.append("file[]", this.imagesArray[i]);
+
+      for (var i = 0; i < this.image_list.length; i++) {
+        formData.append("file[]", this.image_list[i]);
       }
-      /*
+
       axios
         .post("http://localhost/api/upload_file", formData, {})
         .then((res) => {
           console.log(res);
         });
 
-    
       /*
       fetch("http://localhost/api/upload_file", {
         method: "post",
@@ -253,7 +260,7 @@ export default defineComponent({
           "Content-Type": "multipart/form-data",
         },
       });
-     */
+     
       fetch("http://localhost/api/upload_file", {
         method: "POST",
         body: formData,
@@ -264,6 +271,7 @@ export default defineComponent({
         .then((ret) => {
           console.log(ret);
         });
+        */
     },
   },
 });
