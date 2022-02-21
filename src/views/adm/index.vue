@@ -41,6 +41,10 @@ const menuOptions = [
     label: "使用者管理",
     key: "User",
   },
+  {
+    label: "商品頁banner",
+    key: "banner",
+  },
 ];
 
 export default defineComponent({

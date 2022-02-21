@@ -129,12 +129,17 @@ def pwdreset(id,code,password) :
         return {"Status":"Success" , "Message": "密碼已修改"}
 
 def productgetlist(): #首頁取得商品
+    sql = text('select * from tb_banner')
+    result = db.engine.execute(sql)
+    banner=[]
+    for row in result:
+        banner.append({"banner_id":str(row[0]),"banner_filename":"http://localhost/shop/banner/"+str(row[1])})
     sql = text('select * from tb_product')
     result = db.engine.execute(sql)
     data=[]
     for row in result:
         data.append({"product_id":str(row[0]),"product_name":str(row[1]),"product_price":str(row[2]),"product_count":str(row[3]),"product_img":str(row[4])})
-    return {"Status":"Success" , "productlist": data}
+    return {"Status":"Success" , "productlist": data, "bannerimg": banner}
 
 
 def infogetproduct(id): #商品頁取得內容

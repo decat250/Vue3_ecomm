@@ -1,22 +1,11 @@
 <template>
   <div class="home">
     <n-carousel autoplay show-dots="false">
-      <img
+      <img v-for="item in bannerimg" v-bind:key="item.banner_id"
         class="carousel-img"
-        src="https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel1.jpeg"
+        v-bind:src="item.banner_filename"
       />
-      <img
-        class="carousel-img"
-        src="https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel2.jpeg"
-      />
-      <img
-        class="carousel-img"
-        src="https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel3.jpeg"
-      />
-      <img
-        class="carousel-img"
-        src="https://naive-ui.oss-cn-beijing.aliyuncs.com/carousel-img/carousel4.jpeg"
-      />
+      
     </n-carousel>
     <n-space vertical>
       <n-layout has-sider>
@@ -43,14 +32,12 @@
         <n-layout>
           <span>
             <div class="row" style="margin-top: 10px">
-              <router-link :to = "`/ProductInfo/${item.product_id}`"
+              <router-link
+                :to="`/ProductInfo/${item.product_id}`"
                 v-for="item in productlist"
                 v-bind:key="item.id"
-                
                 class="col-4"
-                
                 style="text-decoration: none"
-             
               >
                 <n-card
                   title=""
@@ -60,16 +47,13 @@
                   }"
                 >
                   <template #header-extra> #header-extra </template>
-                  <img
-                    class="img-fluid"
-                    v-bind:src="item.product_img"
-                  />
-  
-                  <template #footer>
-                    {{item.product_name}}</template
-                  >
+                  <img class="img-fluid" v-bind:src="item.product_img" />
+
+                  <template #footer> {{ item.product_name }}</template>
                   <template #action>
-                    <h5 style="color: red">NT $ {{item.product_price}}</h5></template
+                    <h5 style="color: red">
+                      NT $ {{ item.product_price }}
+                    </h5></template
                   >
                 </n-card>
               </router-link>
@@ -118,6 +102,7 @@ const menuOptions = [
 export default defineComponent({
   data() {
     return {
+      bannerimg:[],
       productlist: [
         {
           product_count: "30",
@@ -128,20 +113,11 @@ export default defineComponent({
             "\u3010\u9810\u8cfc\u3011\u53e3\u888b\u76f8\u7c3f\u4e09\u4ee3Piconizer3 128G \u73ab\u7470\u91d1 \u2605\u9001\u4fdd\u8b77\u5957\uff06\u8f49\u63a5\u982d",
           product_price: "1000",
         },
-        {
-          product_count: "30",
-          product_id: "1",
-          product_img:
-            "https://shoplineimg.com/54a230f9e37ec655ce00000d/6204d657a1efde0a05bacba7/800x.webp?source_format=jpg",
-          product_name:
-            "\u3010\u9810\u8cfc\u3011\u53e3\u888b\u76f8\u7c3f\u4e09\u4ee3Piconizer3 128G \u73ab\u7470\u91d1 \u2605\u9001\u4fdd\u8b77\u5957\uff06\u8f49\u63a5\u982d",
-          product_price: "1000",
-        },
-        
+       
       ],
     };
   },
-  setup() { 
+  setup() {
     return {
       menuOptions,
       renderMenuLabel(option) {
@@ -153,8 +129,7 @@ export default defineComponent({
       },
     };
   },
-  mounted()
-  {
+  mounted() {
     fetch("http://127.0.0.1/api/getproductlist", {
       method: "get",
       headers: {
@@ -166,11 +141,9 @@ export default defineComponent({
         return data.json();
       })
       .then((ret) => {
-        console.log(ret.productlist);
-        this.productlist = ret.productlist
-        
+        this.bannerimg = ret.bannerimg
+        this.productlist = ret.productlist;
       });
-  }
- 
+  },
 });
 </script>
