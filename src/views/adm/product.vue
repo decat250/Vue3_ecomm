@@ -57,7 +57,11 @@
           ref="fileInput"
           style="display: none"
         />
-        <n-button type="primary" onclick="document.getElementById('my-file').click();">瀏覽檔案 </n-button>
+        <n-button
+          type="primary"
+          onclick="document.getElementById('my-file').click();"
+          >瀏覽檔案
+        </n-button>
 
         <div class="container testimonial-group" style="margin-top: 10px">
           <div class="row text-center">
@@ -73,7 +77,7 @@
                 style="max-width: 100px"
               />
               <p class="mb-0">file name: {{ image_list[index].name }}</p>
-              
+
               <n-button type="error" v-on:click="deleteimg(index)">
                 刪除
               </n-button>
@@ -239,41 +243,22 @@ export default defineComponent({
       }
     },
     newproduct() {
-      
-      console.log(this.image_list)
-      console.log(this.preview_list)
       const formData = new FormData();
 
       for (var i = 0; i < this.image_list.length; i++) {
+        console.log(this.image_list[i]);
         formData.append("file[]", this.image_list[i]);
       }
 
+      formData.append('file[]', 6);
+
+
+      console.log(formData);
       axios
         .post("http://localhost/api/upload_file", formData, {})
         .then((res) => {
           console.log(res);
         });
-
-      /*
-      fetch("http://localhost/api/upload_file", {
-        method: "post",
-        body: data,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-     
-      fetch("http://localhost/api/upload_file", {
-        method: "POST",
-        body: formData,
-      })
-        .then((data) => {
-          return data.json();
-        })
-        .then((ret) => {
-          console.log(ret);
-        });
-        */
     },
   },
 });

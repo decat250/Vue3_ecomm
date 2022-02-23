@@ -42,7 +42,7 @@ const menuOptions = [
     key: "User",
   },
   {
-    label: "商品頁banner",
+    label: "商品頁banner管理",
     key: "banner",
   },
 ];

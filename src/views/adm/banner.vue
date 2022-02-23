@@ -57,7 +57,7 @@
 </style>
 <script>
 import { defineComponent } from "vue";
-
+import axios from "axios";
 export default defineComponent({
   components: {},
 
@@ -70,7 +70,6 @@ export default defineComponent({
       preview: "",
       image_list: [],
       preview_list: [],
-      bannerimg: [],
     };
   },
   mounted() {
@@ -85,23 +84,37 @@ export default defineComponent({
         return data.json();
       })
       .then((ret) => {
-        console.log(ret.bannerimg);
-        this.preview_list = ret.bannerimg;
-        this.image_list = ret.bannerimg;
+        for (var i = 0; i < ret.bannerimg.length; i++) {
+          this.getfileimg(ret.bannerimg[i].item);
+        }
       });
   },
   methods: {
+    getfileimg(url) {
+      fetch(url, { mode: "cors" })
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], "url.jpg", { type: "image/png" });
+          this.image_list.push(file);
+
+          var fr = new FileReader();
+          fr.onload = (e) => {
+            this.preview_list.push(e.target.result);
+          };
+          fr.readAsDataURL(blob);
+        });
+    },
+
     deleteimg(index) {
+      console.log(index);
       this.preview_list.splice(index, 1);
       this.image_list.splice(index, 1);
     },
     previewMultiImage: function (event) {
       //this.imagesArray = event.target.files;
-
       var input = event.target;
       var count = input.files.length;
       var index = 0;
-
       if (input.files) {
         while (count--) {
           var reader = new FileReader();
@@ -115,15 +128,21 @@ export default defineComponent({
       }
     },
     newproduct() {
-      var formData = new FormData();
-      var URL = "http://localhost/shop/banner/carousel1.jpeg";
-      console.log(URL.name)
-      formData.append('pic[]', URL);
 
-      var xhttp = new XMLHttpRequest();
-      xhttp.open("POST", "http://localhost/api/upload_file", true);
-      xhttp.withCredentials = false;
-      xhttp.send(formData);
+      const formData = new FormData();
+
+      for (var i = 0; i < this.image_list.length; i++) {
+        formData.append("file[]", this.image_list[i]);
+      }
+
+      axios.post("http://localhost/api/bannering", formData, {}).then((res) => {
+        console.log(res.data.Status)
+        if (res.data.Status == "Success") {      
+          window.$message.success("資料修改完成");
+        } else {
+          window.$message.error(res.Message);
+        }
+      });
     },
   },
 });

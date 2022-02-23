@@ -133,7 +133,7 @@ def productgetlist(): #首頁取得商品
     result = db.engine.execute(sql)
     banner=[]
     for row in result:
-        banner.append({"banner_id":str(row[0]),"banner_filename":"http://localhost/shop/banner/"+str(row[1])})
+        banner.append({"banner_id":str(row[0]),"item":"http://localhost/shop/banner/"+str(row[1])})
     sql = text('select * from tb_product')
     result = db.engine.execute(sql)
     data=[]
@@ -174,4 +174,14 @@ def infogetproduct(id): #商品頁取得內容
     data["opt"]=opt
 
     return {"Status":"Success" , "productdata": data}
+
+def imgbanner(img): #商品頁取得內容
+  
+    sql = text('delete from tb_banner')
+    result = db.engine.execute(sql)
     
+    for i in img:
+        sql = text('insert into `tb_banner` (`banner_filename`) VALUES ("'+str(i)+'")')
+        result = db.engine.execute(sql)
+
+    return {"Status":"Success"}

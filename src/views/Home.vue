@@ -3,7 +3,7 @@
     <n-carousel autoplay show-dots="false">
       <img v-for="item in bannerimg" v-bind:key="item.banner_id"
         class="carousel-img"
-        v-bind:src="item.banner_filename"
+        v-bind:src="item.item"
       />
       
     </n-carousel>
@@ -141,6 +141,7 @@ export default defineComponent({
         return data.json();
       })
       .then((ret) => {
+        console.log(ret)
         this.bannerimg = ret.bannerimg
         this.productlist = ret.productlist;
       });

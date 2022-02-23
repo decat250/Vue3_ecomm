@@ -17,8 +17,9 @@ from database.api import sendvaildresetpwd
 from database.api import pwdreset
 from database.api import productgetlist
 from database.api import infogetproduct
+from database.api import imgbanner
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
-
+import glob
 # 這就是app名稱
 app = application
 api = Api(app)
@@ -149,8 +150,7 @@ def getproductinfo(id):
 
 @app.route('/api/upload_file', methods=['GET', 'POST'])
 def upload_file():
-    if request.method == 'POST':
-        print(request.files)
+    if request.method == 'POST':    
         file = request.files.getlist("file[]")
         out=[]
         for files in file:
@@ -160,18 +160,32 @@ def upload_file():
             newfilename = createRandomString(20)
             out.append(newfilename+"."+filename.split(".")[0])
             files.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                                    newfilename+"."+filename.split(".")[0]))
+                                    "image/"+newfilename+"."+filename.split(".")[0]))
         return {"Status":"Success","ImageData":out}
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form action="" enctype="multipart/form-data" method=post enctype=multipart/form-data>
-      <p><input type=file name=file[] multiple="">
-         <input type=submit value=Upload>
-    </form>
-    '''
+   
 
+
+@app.route('/api/bannering', methods=['GET', 'POST']) #banner照片編輯
+def bannering():
+    if request.method == 'POST':
+        file = request.files.getlist("file[]")
+        deletefolder = glob.glob(path+"/banner"+"/*")
+        for f in deletefolder:
+            os.remove(f)
+        out=[]
+        
+        for files in file:
+            print(files.filename)
+            filename = (files.filename.split(".")[1])
+            #filename = secure_filename(file.filename)
+            newfilename = createRandomString(20)
+            out.append(newfilename+"."+filename.split(".")[0])
+            files.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                                    "banner/"+newfilename+"."+filename.split(".")[0]))    
+        imgbanner(out)
+        
+        return {"Status":"Success"}
+   
 
 def createRandomString(len):
     print('wet'.center(10, '*'))
@@ -191,6 +205,7 @@ def createRandomString(len):
 
 
 if __name__ == '__main__':
-    app.config['UPLOAD_FOLDER'] = "/opt/homebrew/var/www/shop/image"
+    path="/opt/homebrew/var/www/shop/"
+    app.config['UPLOAD_FOLDER'] = path
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     app.run(debug=True)
