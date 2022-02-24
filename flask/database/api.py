@@ -138,7 +138,12 @@ def productgetlist(): #首頁取得商品
     result = db.engine.execute(sql)
     data=[]
     for row in result:
-        data.append({"product_id":str(row[0]),"product_name":str(row[1]),"product_price":str(row[2]),"product_count":str(row[3]),"product_img":str(row[4])})
+        sql = text('select * from `tb_product_img` where `product_id` = "'+str(row[0])+'" order by product_id')
+        img = db.engine.execute(sql)
+        imgsrc =""
+        for imgrow in img:
+            imgsrc = imgrow[2]
+        data.append({"product_id":str(row[0]),"product_name":str(row[1]),"product_price":str(row[2]),"product_count":str(row[3]),"product_img":str(imgsrc)})
     return {"Status":"Success" , "productlist": data, "bannerimg": banner}
 
 
@@ -185,3 +190,22 @@ def imgbanner(img): #商品頁取得內容
         result = db.engine.execute(sql)
 
     return {"Status":"Success"}
+
+
+def productnew(product_name,product_count,product_price,product_describe):
+    sql = text("insert into `tb_product` (`product_name`,`product_price`,`product_count`,`product_describe`) VALUES ('"+str(product_name)+"','"+str(product_count)+"','"+str(product_price)+"','"+str(product_describe)+"')")
+    result = db.engine.execute(sql)
+    
+    sql = text("SELECT product_id FROM `tb_product` order by product_id")
+    lastid=0
+    result = db.engine.execute(sql)
+    for row in result:
+        lastid=row[0]
+    return {"Status":"Success","lastid":lastid}
+
+def newproductimg(lastid,file):
+    for i in file:
+        sql = text('insert into `tb_product_img` (`product_id`,`product_img_url`) VALUES ("'+str(lastid)+'","http://localhost/shop/product/'+str(lastid)+'/'+str(i)+'")')
+        result = db.engine.execute(sql)
+
+    return {"Status":"Success","Message":"商品新增成功"} 

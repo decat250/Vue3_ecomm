@@ -1,14 +1,23 @@
 <template>
   商品管理
   <n-button type="primary" @click="showModal = true"> 新增商品 </n-button>
-
-  <n-data-table
-    :columns="columns"
-    :data="productlist"
-    :pagination="pagination"
-    :bordered="false"
-  />
-
+  <table class="table table-hover table-bordered" id="example">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Job Title</th>
+      </tr>
+    </thead>
+    <tbody>
+      <td>d</td>
+      <td>d</td>
+      <td>d</td>
+      <td>s</td>
+     
+    </tbody>
+  </table>
   <n-modal v-model:show="showModal">
     <n-card
       style="width: 600px"
@@ -19,19 +28,19 @@
       aria-modal="true"
     >
       <n-form :model="model" ref="formRef" :rules="rules">
-        <n-form-item path="product_name" label="商品名稱">
+        <n-form-item path="" label="商品名稱">
           <n-input
             placeholder="請輸入商品名稱"
             clearable
-            v-model:value="model.password"
+            v-model:value="product_name"
             type=""
           />
         </n-form-item>
         {{ fileList }}
         <div class="row">
-          <n-form-item class="col-6" path="product_price" label="價格">
+          <n-form-item class="col-6" path="" label="價格">
             <n-input-number
-              v-model:value="model.price"
+              v-model:value="product_price"
               placeholder="請輸入商品價格"
               clearable
             />
@@ -40,7 +49,7 @@
           <n-form-item class="col-6" path="product_count" label="數量">
             <n-input-number
               placeholder="請輸入商品數量"
-              v-model:value="model.count"
+              v-model:value="product_count"
               clearable
             />
           </n-form-item>
@@ -76,7 +85,6 @@
                 v-on:click="clicking($event)"
                 style="max-width: 100px"
               />
-              <p class="mb-0">file name: {{ image_list[index].name }}</p>
 
               <n-button type="error" v-on:click="deleteimg(index)">
                 刪除
@@ -87,8 +95,7 @@
 
         <hr />
         商品描述
-        <vue-editor v-model="content" />
-        {{ content }}
+        <vue-editor v-model="product_describe" />
 
         <n-button type="primary" @click="newproduct()" block secondary strong
           >新增商品
@@ -132,82 +139,75 @@
 }
 </style>
 <script>
-import { h, defineComponent, ref } from "vue";
-import { NButton, useMessage } from "naive-ui";
+import { defineComponent, ref } from "vue";
 import { VueEditor } from "vue3-editor";
 import axios from "axios";
-const createColumns = ({ play }) => {
-  return [
-    {
-      title: "代號",
-      key: "product_id",
-    },
-    {
-      title: "商品名稱",
-      key: "product_name",
-    },
-    {
-      title: "數量",
-      key: "product_count",
-    },
-    {
-      title: "價格",
-      key: "product_price",
-    },
-    {
-      title: "操作",
-      key: "actions",
-      render(row) {
-        return h(
-          NButton,
-          {
-            strong: true,
-            type: "primary",
-            tertiary: true,
-            size: "small",
-            onClick: () => play(row),
-          },
-          { default: () => "Play" }
-        );
-      },
-    },
-  ];
-};
-
+import "bootstrap/dist/css/bootstrap.min.css";
+import "jquery/dist/jquery.min.js";
+import "datatables.net-dt/js/dataTables.dataTables";
+import "datatables.net-dt/css/jquery.dataTables.min.css";
+import $ from "jquery";
 export default defineComponent({
   components: { VueEditor },
 
   setup() {
-    const message = useMessage();
     const formRef = ref(null);
     const rPasswordFormItemRef = ref(null);
     const modelRef = ref({});
+    fetch("http://127.0.0.1/api/getproductlist", {
+      method: "get",
+    })
+      .then((data) => {
+        return data.json();
+      })
+      .then((ret) => {
+        this.productlist = ret.productlist;
+      });
 
     return {
       showModal: ref(false),
-      columns: createColumns({
-        play(row) {
-          this.showModal = true;
-          message.info(`Play ${row.product_id}`);
-        },
-      }),
+
       pagination: { pageSize: 10 },
       formRef,
       rPasswordFormItemRef,
       model: modelRef,
       rules: {},
+
+
     };
   },
   data() {
     return {
-      content: "<h1>Some initial content</h1>",
       productlist: [],
       preview: "",
       image_list: [],
       preview_list: [],
+
+      product_count:0,
+      product_price:0,
+      product_name:"1",
+      product_describe:"<h1>Some initial content</h1>"
     };
   },
   mounted() {
+    let proxy = this;
+    var table = $("#example").DataTable({
+      ajax: "https://datatables.net/examples/ajax/data/arrays.txt?_=1645705512738",
+      columnDefs: [
+        {
+          targets: -1,
+          data: null,
+          defaultContent: "<button>Click!</button>",
+        },
+      ],
+    });
+
+    $("#example tbody").on("click", "button", function () {
+      console.log(proxy)
+      var data = table.row($(this).parents("tr")).data();
+      alert(data[0] + "'s salary is: " + data[2]);
+    });
+
     fetch("http://127.0.0.1/api/getproductlist", {
       method: "get",
     })
@@ -249,15 +249,28 @@ export default defineComponent({
         console.log(this.image_list[i]);
         formData.append("file[]", this.image_list[i]);
       }
-
-      formData.append('file[]', 6);
-
+      
+      formData.append("product_count", this.product_count);
+      formData.append("product_name",this.product_name)
+      formData.append("product_describe",this.product_describe)
+      formData.append("product_price",this.product_price)
 
       console.log(formData);
       axios
-        .post("http://localhost/api/upload_file", formData, {})
+        .post("http://localhost/api/newproduct", formData, {})
         .then((res) => {
-          console.log(res);
+          if (res.data.Status=="Success")
+          {
+            this.showModal = false;
+            this.image_list=[]
+            this.preview_list=[]
+            this.product_count=0
+            this.product_name=""
+            this.product_describe=""
+            this.product_price=
+            window.$message.success(res.data.Message);
+          }
+          
         });
     },
   },

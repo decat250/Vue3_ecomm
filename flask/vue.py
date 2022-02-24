@@ -18,6 +18,8 @@ from database.api import pwdreset
 from database.api import productgetlist
 from database.api import infogetproduct
 from database.api import imgbanner
+from database.api import productnew
+from database.api import newproductimg
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -148,9 +150,24 @@ def getproductinfo(id):
 
 
 
-@app.route('/api/upload_file', methods=['GET', 'POST'])
-def upload_file():
+@app.route('/api/newproduct', methods=['GET', 'POST'])
+def newproduct():
     if request.method == 'POST':    
+        print(request.form)
+        
+        product_name = request.form['product_name']
+        product_count = request.form['product_count']
+        product_describe = request.form['product_describe']
+        product_price = request.form['product_price']
+
+        r = productnew(product_name,product_count,product_price,product_describe)
+        lastid =r["lastid"]
+        
+        path=app.config['UPLOAD_FOLDER']+"/product/"+str(lastid)
+        isExist = os.path.exists(path)
+        if not isExist:
+            os.makedirs(path)
+
         file = request.files.getlist("file[]")
         out=[]
         for files in file:
@@ -160,8 +177,10 @@ def upload_file():
             newfilename = createRandomString(20)
             out.append(newfilename+"."+filename.split(".")[0])
             files.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                                    "image/"+newfilename+"."+filename.split(".")[0]))
-        return {"Status":"Success","ImageData":out}
+                                    "product/"+str(lastid)+"/"+newfilename+"."+filename.split(".")[0]))
+
+        r = newproductimg(lastid,out)
+        return {"Status":"Success","Message":"商品新增成功"}
    
 
 
