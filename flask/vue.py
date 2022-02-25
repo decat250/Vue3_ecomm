@@ -4,6 +4,8 @@ from flask_cors import CORS
 from multiprocessing.spawn import import_main_path
 import os
 import random
+import shutil
+
 from flask import Flask, request, jsonify, redirect, flash, url_for, render_template
 from flask_restful import Api, Resource, reqparse, abort
 
@@ -20,6 +22,8 @@ from database.api import infogetproduct
 from database.api import imgbanner
 from database.api import productnew
 from database.api import newproductimg
+from database.api import listproductadmget
+from database.api import productdel
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -140,7 +144,6 @@ def getproductlist():
 
 @app.route('/api/getproductinfo/<id>', methods=['GET'])  # 商品資訊頁取得商品內容
 def getproductinfo(id):
-
     try:
         r = infogetproduct(id)
         return r
@@ -149,62 +152,82 @@ def getproductinfo(id):
         return {"Status": "Failed", "Return": str(e)}
 
 
-
 @app.route('/api/newproduct', methods=['GET', 'POST'])
 def newproduct():
-    if request.method == 'POST':    
-        print(request.form)
+    if request.method == 'POST':
         
         product_name = request.form['product_name']
         product_count = request.form['product_count']
         product_describe = request.form['product_describe']
         product_price = request.form['product_price']
 
-        r = productnew(product_name,product_count,product_price,product_describe)
-        lastid =r["lastid"]
-        
-        path=app.config['UPLOAD_FOLDER']+"/product/"+str(lastid)
+        r = productnew(product_name, product_count,
+                       product_price, product_describe)
+        lastid = r["lastid"]
+
+        path = app.config['UPLOAD_FOLDER']+"/product/"+str(lastid)
         isExist = os.path.exists(path)
         if not isExist:
             os.makedirs(path)
 
         file = request.files.getlist("file[]")
-        out=[]
+        out = []
         for files in file:
             print(files.filename)
             filename = (files.filename.split(".")[1])
-            #filename = secure_filename(file.filename)
+            # filename = secure_filename(file.filename)
             newfilename = createRandomString(20)
             out.append(newfilename+"."+filename.split(".")[0])
             files.save(os.path.join(app.config['UPLOAD_FOLDER'],
                                     "product/"+str(lastid)+"/"+newfilename+"."+filename.split(".")[0]))
 
-        r = newproductimg(lastid,out)
-        return {"Status":"Success","Message":"商品新增成功"}
-   
+        r = newproductimg(lastid, out)
+        return {"Status": "Success", "Message": "商品新增成功"}
 
 
-@app.route('/api/bannering', methods=['GET', 'POST']) #banner照片編輯
+@app.route('/api/bannering', methods=['GET', 'POST'])  # banner照片編輯
 def bannering():
     if request.method == 'POST':
         file = request.files.getlist("file[]")
         deletefolder = glob.glob(path+"/banner"+"/*")
         for f in deletefolder:
             os.remove(f)
-        out=[]
-        
+        out = []
+
         for files in file:
             print(files.filename)
             filename = (files.filename.split(".")[1])
-            #filename = secure_filename(file.filename)
+            # filename = secure_filename(file.filename)
             newfilename = createRandomString(20)
             out.append(newfilename+"."+filename.split(".")[0])
             files.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                                    "banner/"+newfilename+"."+filename.split(".")[0]))    
+                                    "banner/"+newfilename+"."+filename.split(".")[0]))
         imgbanner(out)
-        
-        return {"Status":"Success"}
-   
+
+        return {"Status": "Success"}
+
+
+@app.route('/api/productadmgetlist', methods=['GET', 'POST'])  # banner照片編輯
+def productadmgetlist():
+    try:
+        r = listproductadmget()
+        return r
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/delproduct', methods=['GET', 'POST'])  # banner照片編輯
+def delproduct():
+    try:
+        id = request.form['deleteid']
+        r = productdel(id)
+
+        if (r['Status'] == "Success"):
+            shutil.rmtree(app.config['UPLOAD_FOLDER']+"product/"+str(id), ignore_errors=True)
+
+        return {"Status": "Success", "Message": "商品刪除成功"}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
 
 def createRandomString(len):
     print('wet'.center(10, '*'))
