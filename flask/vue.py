@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # https://ithelp.ithome.com.tw/articles/10202886
+import imp
 from flask_cors import CORS
 from multiprocessing.spawn import import_main_path
 import os
@@ -24,6 +25,8 @@ from database.api import productnew
 from database.api import newproductimg
 from database.api import listproductadmget
 from database.api import productdel
+from database.api import productedit
+from database.api import editproductimg
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -155,14 +158,14 @@ def getproductinfo(id):
 @app.route('/api/newproduct', methods=['GET', 'POST'])
 def newproduct():
     if request.method == 'POST':
-        
+        opt= request.form["opt"].split(",")
         product_name = request.form['product_name']
         product_count = request.form['product_count']
         product_describe = request.form['product_describe']
         product_price = request.form['product_price']
 
         r = productnew(product_name, product_count,
-                       product_price, product_describe)
+                       product_price, product_describe,opt)
         lastid = r["lastid"]
 
         path = app.config['UPLOAD_FOLDER']+"/product/"+str(lastid)
@@ -244,6 +247,37 @@ def createRandomString(len):
         i += 1
     # print(raw)
     return raw
+
+@app.route('/api/editproduct', methods=['GET', 'POST']) #編輯商品
+def editproduct():
+    if request.method == 'POST':
+        opt= request.form["opt"].split(",")
+        product_name = request.form['product_name']
+        product_count = request.form['product_count']
+        product_describe = request.form['product_describe']
+        product_price = request.form['product_price']
+        id = request.form['id']
+
+        r = productedit(id,product_name, product_count,
+                       product_price, product_describe,opt)
+        lastid = id
+
+        deletefolder = glob.glob(path+"/product/"+str(lastid)+"/*")
+        for f in deletefolder:
+            os.remove(f)
+
+        file = request.files.getlist("file[]")
+        out = []
+        for files in file:
+            filename = (files.filename.split(".")[1])
+            newfilename = createRandomString(20)
+            out.append(newfilename+"."+filename.split(".")[0])
+            files.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                                    "product/"+str(lastid)+"/"+newfilename+"."+filename.split(".")[0]))
+        print(out)
+        r = editproductimg(lastid, out)
+        return {"Status": "Success", "Message": "商品修改成功"}
+
 
 
 if __name__ == '__main__':

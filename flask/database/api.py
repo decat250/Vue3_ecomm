@@ -171,6 +171,7 @@ def infogetproduct(id):  # 商品頁取得內容
     data = {}
     num = []
     for row in result:
+
         data["product_id"] = str(row[0])
         data['product_name'] = str(row[1])
         data['product_price'] = str(row[2])
@@ -178,7 +179,6 @@ def infogetproduct(id):  # 商品頁取得內容
         data['product_describe'] = str(row[5])
         for i in range(int(row[3])):
             num.append({"label": str(i+1), "value": str(i+1)})
-
     data["num"] = num
 
     sql = text('select * from tb_product_img where product_id="'+str(id)+'"')
@@ -191,9 +191,12 @@ def infogetproduct(id):  # 商品頁取得內容
     sql = text('select * from tb_product_opt where product_id="'+str(id)+'"')
     result = db.engine.execute(sql)
     opt = []
+    optadm = []
     for row in result:
+        optadm.append(row[2])
         opt.append({"label": str(row[2]), "value": str(row[2])})
     data["opt"] = opt
+    data['optadm'] = optadm
 
     return {"Status": "Success", "productdata": data}
 
@@ -211,7 +214,7 @@ def imgbanner(img):  # 商品頁取得內容
     return {"Status": "Success"}
 
 
-def productnew(product_name, product_count, product_price, product_describe):  # 新增商品
+def productnew(product_name, product_count, product_price, product_describe, opt):  # 新增商品
     sql = text("insert into `tb_product` (`product_name`,`product_price`,`product_count`,`product_describe`) VALUES ('" +
                str(product_name)+"','"+str(product_count)+"','"+str(product_price)+"','"+str(product_describe)+"')")
     result = db.engine.execute(sql)
@@ -221,6 +224,11 @@ def productnew(product_name, product_count, product_price, product_describe):  #
     result = db.engine.execute(sql)
     for row in result:
         lastid = row[0]
+    for item in opt:
+        sql = text("insert into `tb_product_opt` (`product_id`,`product_opt_item`) VALUES ('" +
+                   str(lastid)+"','"+str(item)+"')")
+        db.engine.execute(sql)
+
     return {"Status": "Success", "lastid": lastid}
 
 
@@ -248,8 +256,30 @@ def listproductadmget():
         data.append(rowdata)
     return {"data": data}
 
+
 def productdel(id):
     sql = text("delete from tb_product where product_id =  '"+str(id)+"'")
-    result = db.engine.execute(sql)
+    db.engine.execute(sql)
 
     return {"Status": "Success"}
+
+
+def productedit(id, product_name, product_count, product_price, product_describe, opt):
+    sqltext = "update tb_product set `product_name` = '"+str(product_name)+"', `product_count` = '"+str(product_count)+"',`product_price` = '"+str(
+        product_price)+"',`product_describe` = '"+str(product_describe)+"' where `product_id` = '"+str(id)+"'"
+    sql = text(sqltext)
+    print(sqltext)
+    db.engine.execute(sql)
+
+    return {"Status": "Success"}
+
+
+def editproductimg(lastid, file):
+    sql = text("delete from `tb_product_img` where `product_id` = '"+str(lastid)+"'")
+    db.engine.execute(sql)
+    for i in file:
+        sql = text('insert into `tb_product_img` (`product_id`,`product_img_url`) VALUES ("' +
+                   str(lastid)+'","http://localhost/shop/product/'+str(lastid)+'/'+str(i)+'")')
+        db.engine.execute(sql)
+
+    return {"Status": "Success", "Message": "商品新增成功"}

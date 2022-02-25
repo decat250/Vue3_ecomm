@@ -1,6 +1,14 @@
 <template>
   商品管理
-  <n-button type="primary" @click="showModal = true"> 新增商品 </n-button>
+  <n-button
+    type="primary"
+    @click="
+      showModal = true;
+      mod: 0;
+    "
+  >
+    新增商品
+  </n-button>
   <table class="table table-hover table-bordered" id="example">
     <thead>
       <tr>
@@ -55,8 +63,14 @@
             />
           </n-form-item>
         </div>
+        <n-dynamic-input
+          v-model:value="option"
+          placeholder="輸入商品規格"
+          :min="1"
+          :max="6"
+        />
         <hr />
-
+        照片上傳<br />
         <input
           type="file"
           accept="image/*"
@@ -86,7 +100,7 @@
                 v-on:click="clicking($event)"
                 style="max-width: 100px"
               />
-
+              <br />
               <n-button type="error" v-on:click="deleteimg(index)">
                 刪除
               </n-button>
@@ -185,13 +199,14 @@ export default defineComponent({
       preview: "",
       image_list: [],
       preview_list: [],
-
+      option: [""],
       product_count: 0,
       product_price: 0,
       product_name: "1",
-      product_describe: "<h1>Some initial content</h1>",
+      product_describe: "",
 
       editid: 0,
+      mod: 0, //0 新增 1 修改
     };
   },
   mounted() {
@@ -224,8 +239,24 @@ export default defineComponent({
       if ($(this).attr("id") == "del") {
         document.getElementById("deletebtn").click();
         proxy.editid = data[0];
+      } else {
+        proxy.showModal = true;
+        proxy.mod = 1;
+        axios
+          .get("http://127.0.0.1/api/getproductinfo/" + data[0], {})
+          .then((res) => {
+            proxy.product_name = res.data.productdata.product_name;
+            proxy.product_price = res.data.productdata.product_price;
+            proxy.product_count = res.data.productdata.product_count;
+            proxy.product_describe = res.data.productdata.product_describe;
+            proxy.option = res.data.productdata.optadm;
+            proxy.editid = data[0];
+            
+            for (var i = 0; i < res.data.productdata.product_img.length; i++) {
+              proxy.getfileimg(res.data.productdata.product_img[i].src);
+            }
+          });
       }
-
       //console.log(data[0] + "'s salary is: " + data[2]);
     });
   },
@@ -272,6 +303,21 @@ export default defineComponent({
         }
       }
     },
+    getfileimg(url) {
+      //編輯商品仔入相片
+      fetch(url, { mode: "cors" })
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], "url.jpg", { type: "image/png" });
+          this.image_list.push(file);
+
+          var fr = new FileReader();
+          fr.onload = (e) => {
+            this.preview_list.push(e.target.result);
+          };
+          fr.readAsDataURL(blob);
+        });
+    },
     newproduct() {
       const formData = new FormData();
 
@@ -279,27 +325,46 @@ export default defineComponent({
         console.log(this.image_list[i]);
         formData.append("file[]", this.image_list[i]);
       }
-
+      formData.append("id", this.editid);
+      formData.append("opt", this.option);
       formData.append("product_count", this.product_count);
       formData.append("product_name", this.product_name);
       formData.append("product_describe", this.product_describe);
       formData.append("product_price", this.product_price);
-
-      console.log(formData);
-      axios
-        .post("http://localhost/api/newproduct", formData, {})
-        .then((res) => {
-          if (res.data.Status == "Success") {
-            this.showModal = false;
-            this.image_list = [];
-            this.preview_list = [];
-            this.product_count = 0;
-            this.product_name = "";
-            this.product_describe = "";
-            this.product_price = window.$message.success(res.data.Message);
-            $("#example").DataTable().ajax.reload();
-          }
-        });
+      if (this.mod == 0) {
+        axios
+          .post("http://localhost/api/newproduct", formData, {})
+          .then((res) => {
+            if (res.data.Status == "Success") {
+              this.showModal = false;
+              this.image_list = [];
+              this.preview_list = [];
+              this.product_count = 0;
+              this.product_name = "";
+              this.product_describe = "";
+              this.product_price = 0;
+              this.product_img = [];
+              window.$message.success(res.data.Message);
+              $("#example").DataTable().ajax.reload();
+            }
+          });
+      } else {
+        axios
+          .post("http://localhost/api/editproduct", formData, {})
+          .then((res) => {
+            if (res.data.Status == "Success") {
+              this.showModal = false;
+              this.image_list = [];
+              this.preview_list = [];
+              this.product_count = 0;
+              this.product_name = "";
+              this.product_describe = "";
+              this.product_price = 0;
+              window.$message.success(res.data.Message);
+              $("#example").DataTable().ajax.reload();
+            }
+          });
+      }
     },
   },
 });
