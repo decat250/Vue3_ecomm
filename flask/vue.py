@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 # https://ithelp.ithome.com.tw/articles/10202886
+from datetime import datetime
 import imp
 from flask_cors import CORS
 from multiprocessing.spawn import import_main_path
 import os
 import random
 import shutil
-
+import datetime
 from flask import Flask, request, jsonify, redirect, flash, url_for, render_template
 from flask_restful import Api, Resource, reqparse, abort
+import importlib.util
 
 # 我把api的處理都放在database/database.py 用來建立連線
 from database.database import app as application
@@ -27,6 +29,9 @@ from database.api import listproductadmget
 from database.api import productdel
 from database.api import productedit
 from database.api import editproductimg
+from database.api import cartaddto
+from database.api import shopcartget
+from database.api import cartdel
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -158,14 +163,14 @@ def getproductinfo(id):
 @app.route('/api/newproduct', methods=['GET', 'POST'])
 def newproduct():
     if request.method == 'POST':
-        opt= request.form["opt"].split(",")
+        opt = request.form["opt"].split(",")
         product_name = request.form['product_name']
         product_count = request.form['product_count']
         product_describe = request.form['product_describe']
         product_price = request.form['product_price']
 
         r = productnew(product_name, product_count,
-                       product_price, product_describe,opt)
+                       product_price, product_describe, opt)
         lastid = r["lastid"]
 
         path = app.config['UPLOAD_FOLDER']+"/product/"+str(lastid)
@@ -218,6 +223,7 @@ def productadmgetlist():
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
+
 @app.route('/api/delproduct', methods=['GET', 'POST'])  # banner照片編輯
 def delproduct():
     try:
@@ -225,7 +231,8 @@ def delproduct():
         r = productdel(id)
 
         if (r['Status'] == "Success"):
-            shutil.rmtree(app.config['UPLOAD_FOLDER']+"product/"+str(id), ignore_errors=True)
+            shutil.rmtree(app.config['UPLOAD_FOLDER'] +
+                          "product/"+str(id), ignore_errors=True)
 
         return {"Status": "Success", "Message": "商品刪除成功"}
     except Exception as e:
@@ -248,18 +255,19 @@ def createRandomString(len):
     # print(raw)
     return raw
 
-@app.route('/api/editproduct', methods=['GET', 'POST']) #編輯商品
+
+@app.route('/api/editproduct', methods=['GET', 'POST'])  # 編輯商品
 def editproduct():
     if request.method == 'POST':
-        opt= request.form["opt"].split(",")
+        opt = request.form["opt"].split(",")
         product_name = request.form['product_name']
         product_count = request.form['product_count']
         product_describe = request.form['product_describe']
         product_price = request.form['product_price']
         id = request.form['id']
 
-        r = productedit(id,product_name, product_count,
-                       product_price, product_describe,opt)
+        r = productedit(id, product_name, product_count,
+                        product_price, product_describe, opt)
         lastid = id
 
         deletefolder = glob.glob(path+"/product/"+str(lastid)+"/*")
@@ -278,10 +286,156 @@ def editproduct():
         r = editproductimg(lastid, out)
         return {"Status": "Success", "Message": "商品修改成功"}
 
+@app.route('/api/addtocart', methods=['GET', 'POST'])  # 編輯商品
+def addtocart():
+    if request.method == 'POST':
+        
+        userid = request.form['userid']
+        opt = request.form['selopt']
+        product_id = request.form['product_id']
+        product_count= request.form['product_count']
+
+        r = cartaddto(userid,product_id,product_count,opt)
+        return {"Status": "Success", "Message": "商品已成功加入購物車"}
+
+@app.route('/api/getshopcart/<userid>', methods=['GET', 'POST'])  # 取得購物車內容
+def getshopcart(userid):
+    if request.method == 'GET':
+        r = shopcartget(userid)
+        return r
+
+@app.route('/api/delcart', methods=['GET', 'POST'])  # banner照片編輯
+def delcart():
+    try:
+        id = request.form['deleteid']
+        r = cartdel(id)
+        return {"Status": "Success", "Message": "商品刪除成功"}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/pay', methods=['GET', 'POST'])  # 編輯商品
+def pay():
+
+    TotalAmount = request.form['TotalAmount']
+    ItemName = request.form['ItemName']
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "ecpay_payment_sdk",
+        "/Users/decat/Vue3_ecomm/flask/ecpay_payment_sdk.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    from datetime import datetime
+
+    order_params = {
+        'MerchantTradeNo': datetime.now().strftime("NO%Y%m%d%H%M%S"),
+        'StoreID': '',
+        'MerchantTradeDate': datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
+        'PaymentType': 'aio',
+        'TotalAmount': TotalAmount,
+        'TradeDesc': '訂單測試',
+        'ItemName': ItemName,
+        'ReturnURL': 'http://127.0.0.1/test',
+        'ChoosePayment': 'ALL',
+        'ClientBackURL': 'https://www.ecpay.com.tw/client_back_url.php',
+        'ItemURL': 'https://www.ecpay.com.tw/item_url.php',
+        'Remark': '交易備註',
+        'ChooseSubPayment': '',
+        'OrderResultURL': 'http://127.0.0.1/test',
+        'NeedExtraPaidInfo': 'Y',
+        'DeviceSource': '',
+        'IgnorePayment': '',
+        'PlatformID': '',
+        'InvoiceMark': 'N',
+        'CustomField1': '',
+        'CustomField2': '',
+        'CustomField3': '',
+        'CustomField4': '',
+        'EncryptType': 1,
+    }
+
+    extend_params_1 = {
+        'ExpireDate': 7,
+        'PaymentInfoURL': 'https://www.ecpay.com.tw/payment_info_url.php',
+        'ClientRedirectURL': '',
+    }
+
+    extend_params_2 = {
+        'StoreExpireDate': 15,
+        'Desc_1': '',
+        'Desc_2': '',
+        'Desc_3': '',
+        'Desc_4': '',
+        'PaymentInfoURL': 'https://www.ecpay.com.tw/payment_info_url.php',
+        'ClientRedirectURL': '',
+    }
+
+    extend_params_3 = {
+        'BindingCard': 0,
+        'MerchantMemberID': '',
+    }
+
+    extend_params_4 = {
+        'Redeem': 'N',
+        'UnionPay': 0,
+    }
+
+    inv_params = {
+        # 'RelateNumber': 'Tea0001', # 特店自訂編號
+        # 'CustomerID': 'TEA_0000001', # 客戶編號
+        # 'CustomerIdentifier': '53348111', # 統一編號
+        # 'CustomerName': '客戶名稱',
+        # 'CustomerAddr': '客戶地址',
+        # 'CustomerPhone': '0912345678', # 客戶手機號碼
+        # 'CustomerEmail': 'abc@ecpay.com.tw',
+        # 'ClearanceMark': '2', # 通關方式
+        # 'TaxType': '1', # 課稅類別
+        # 'CarruerType': '', # 載具類別
+        # 'CarruerNum': '', # 載具編號
+        # 'Donation': '1', # 捐贈註記
+        # 'LoveCode': '168001', # 捐贈碼
+        # 'Print': '1',
+        # 'InvoiceItemName': '測試商品1|測試商品2',
+        # 'InvoiceItemCount': '2|3',
+        # 'InvoiceItemWord': '個|包',
+        # 'InvoiceItemPrice': '35|10',
+        # 'InvoiceItemTaxType': '1|1',
+        # 'InvoiceRemark': '測試商品1的說明|測試商品2的說明',
+        # 'DelayDay': '0', # 延遲天數
+        # 'InvType': '07', # 字軌類別
+    }
+
+    # 建立實體
+    ecpay_payment_sdk = module.ECPayPaymentSdk(
+        MerchantID='2000132',
+        HashKey='5294y06JbISpM5x9',
+        HashIV='v77hoKGq4kWxNNIS'
+    )
+
+    # 合併延伸參數
+    order_params.update(extend_params_1)
+    order_params.update(extend_params_2)
+    order_params.update(extend_params_3)
+    order_params.update(extend_params_4)
+
+    # 合併發票參數
+    order_params.update(inv_params)
+
+    try:
+        # 產生綠界訂單所需參數
+        final_order_params = ecpay_payment_sdk.create_order(order_params)
+
+        # 產生 html 的 form 格式
+        action_url = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5'  # 測試環境
+        html = ecpay_payment_sdk.gen_html_post_form(action_url, final_order_params)
+        return (html)
+    except Exception as error:
+        print('An exception happened: ' + str(error))
 
 
 if __name__ == '__main__':
-    path="/opt/homebrew/var/www/shop/"
+
+    path = "/opt/homebrew/var/www/shop/"
     app.config['UPLOAD_FOLDER'] = path
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     app.run(debug=True)

@@ -86,6 +86,7 @@ const routes = [
       nav: () => import('../components/header.vue'),
     }
   },
+
   {
     path: '/:catchAll(.*)',
     components: {

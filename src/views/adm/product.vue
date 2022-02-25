@@ -235,6 +235,12 @@ export default defineComponent({
     });
     let proxy = this;
     $("#example tbody").on("click", "button", function () {
+      this.image_list = [];
+      this.preview_list = [];
+      this.product_count = 0;
+      this.product_name = "";
+      this.product_describe = "";
+      this.product_price = 0;
       var data = table.row($(this).parents("tr")).data();
       if ($(this).attr("id") == "del") {
         document.getElementById("deletebtn").click();
@@ -251,7 +257,7 @@ export default defineComponent({
             proxy.product_describe = res.data.productdata.product_describe;
             proxy.option = res.data.productdata.optadm;
             proxy.editid = data[0];
-            
+
             for (var i = 0; i < res.data.productdata.product_img.length; i++) {
               proxy.getfileimg(res.data.productdata.product_img[i].src);
             }
@@ -354,12 +360,7 @@ export default defineComponent({
           .then((res) => {
             if (res.data.Status == "Success") {
               this.showModal = false;
-              this.image_list = [];
-              this.preview_list = [];
-              this.product_count = 0;
-              this.product_name = "";
-              this.product_describe = "";
-              this.product_price = 0;
+
               window.$message.success(res.data.Message);
               $("#example").DataTable().ajax.reload();
             }

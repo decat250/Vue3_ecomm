@@ -10,16 +10,20 @@
           />
         </div>
 
-        <div class="container testimonial-group" style="margin-top:10px">
+        <div class="container testimonial-group" style="margin-top: 10px">
           <div class="row text-center">
-            <div class="col-4" v-for="item in product_imglist" v-bind:key="item.id">
+            <div
+              class="col-4"
+              v-for="item in product_imglist"
+              v-bind:key="item.id"
+            >
               <img
                 v-on:click="clicking($event)"
                 ref="referenceMe"
                 style="max-width: 100px"
                 v-bind:src="item.src"
               />
-            </div>           
+            </div>
           </div>
         </div>
       </div>
@@ -56,7 +60,12 @@
                 </n-button>
               </div>
               <div class="col-6">
-                <n-button type="error" block secondary strong v-on:click="login"
+                <n-button
+                  type="error"
+                  block
+                  secondary
+                  strong
+                  v-on:click="buyitem"
                   >立即購買
                 </n-button>
               </div>
@@ -88,7 +97,7 @@
 }
 
 .vertical-center {
-  min-height: 100%;  /* Fallback for browsers do NOT support vh unit */
+  min-height: 100%; /* Fallback for browsers do NOT support vh unit */
 
   display: flex;
   align-items: center;
@@ -97,6 +106,7 @@
 <script>
 import { defineComponent, ref } from "vue";
 import { useRoute } from "vue-router";
+import axios from "axios";
 export default defineComponent({
   setup() {
     return {
@@ -106,11 +116,11 @@ export default defineComponent({
   data() {
     return {
       productdata: {
-        product_imglist:[],
+        product_imglist: [],
         product_name: "",
         product_price: "30",
         product_count: "",
-        product_img:"",
+        product_img: "",
         product_describe: "",
         num: [],
         opt: [],
@@ -132,22 +142,49 @@ export default defineComponent({
         return data.json();
       })
       .then((ret) => {
+        this.product_id = ret.productdata.product_id;
         this.productdata.product_name = ret.productdata.product_name;
         this.productdata.product_price = ret.productdata.product_price;
         this.productdata.product_img = ret.productdata.product_img[0].src;
         this.productdata.product_describe = ret.productdata.product_describe;
         this.productdata.opt = ret.productdata.opt;
         this.productdata.num = ret.productdata.num;
-        this.product_imglist = ret.productdata.product_img
+        this.product_imglist = ret.productdata.product_img;
       });
   },
   methods: {
-    clicking($event) { //商品圖片列表點擊
+    buyitem() {
+      const formData = new FormData();
+      formData.append("product_id", this.product_id);
+      formData.append("selopt", this.selopt);
+      formData.append("product_count", this.selnum);
+      formData.append("userid", localStorage.getItem("id"));
+
+      axios.post("http://localhost/api/addtocart", formData, {}).then((res) => {
+        if (res.data.Status == "Success") {
+          window.$message.success(res.data.Message);
+          this.$router.push({ path: "/Shopcart" });
+          //$("#example").DataTable().ajax.reload();
+        }
+      });
+    },
+    clicking($event) {
+      //商品圖片列表點擊
       this.productdata.product_img = $event.currentTarget.src;
     },
     addtocard() {
-      console.log(this.selopt);
-      console.log(this.selnum);
+      const formData = new FormData();
+      formData.append("product_id", this.product_id);
+      formData.append("selopt", this.selopt);
+      formData.append("product_count", this.selnum);
+      formData.append("userid", localStorage.getItem("id"));
+
+      axios.post("http://localhost/api/addtocart", formData, {}).then((res) => {
+        if (res.data.Status == "Success") {
+          window.$message.success(res.data.Message);
+          //$("#example").DataTable().ajax.reload();
+        }
+      });
     },
   },
 });

@@ -528,6 +528,7 @@ export default defineComponent({
                 this.showLoginModal = false;
                 this.islogin = true;
                 localStorage.setItem("account", ret.data[0]);
+                localStorage.setItem("id", ret.data[5]);
                 window.$message.success(ret.Message);
                 this.loginformValue.account = "";
                 this.loginformValue.password = "";

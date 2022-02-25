@@ -107,10 +107,12 @@ export default defineComponent({
             })
             .then((ret) => {
               if (ret.Status == "Success") {
+                console.log(ret)
                 this.$router.push({ path: '/admindex'})
                 this.showLoginModal = false;
                 this.islogin = true;
                 localStorage.setItem("account", ret.data[0]);
+                
                 window.$message.success(ret.Message);
                 this.loginformValue.account = "";
                 this.loginformValue.password = "";
