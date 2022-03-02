@@ -49,6 +49,7 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 @app.route("/api/signin", methods=['POST'])
 def signin():
     post_data = request.get_json()
+    googlelogin = post_data.get("googlelogin")
     account = post_data.get('account')
     password = post_data.get('password')
     # account = request.form['account']#取得名為account的傳入值
@@ -56,8 +57,9 @@ def signin():
 
     if(account != None and password != None):
         try:
+            
             # 呼叫自己寫的函數來處理，Class login放在database/api裡面
-            r = login(account, password)
+            r = login(account, password,googlelogin)
 
             return r
 

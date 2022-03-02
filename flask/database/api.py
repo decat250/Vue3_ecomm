@@ -27,8 +27,11 @@ db.create_all()  # db建立連線
 # 用來登入的API的處理(一個Class)，這邊login會傳入兩個變數(帳號，密碼)
 
 
-def login(ac, pw):  # 登入
+def login(ac, pw, googlelogin):  # 登入
     try:
+        print(googlelogin)
+        print(ac)
+        print(pw)
         sql = text('select * from tb_user where User_account="' +
                    str(ac)+'" and user_password="'+str(pw)+'"')
         result = db.engine.execute(sql)
@@ -36,9 +39,12 @@ def login(ac, pw):  # 登入
         for row in result:
             data = [row[1], row[2], row[3], row[4], row[5], row[0]]
         if (len(data) == 0):
-            return {"Status": "Failed", "Message": "帳號密碼錯誤"}
+            if googlelogin == 0:
+                return {"Status": "Failed", "Message": "帳號密碼錯誤"}
+            else:
+                return {"Status": "GN", "Message": "您是第一次使用Google帳號，請先建立帳號"}
         else:
-            return {"Status": "Success", "Message": str(data[0])+"您好", "data": data}
+            return {"Status": "Success", "Message": str(data[1])+"您好", "data": data}
     except Exception as e:
         print("error occur: %s" % (e))
 
@@ -208,25 +214,26 @@ def shopcartget(userid):
     data = []
     for row in result:
         rowdata = []
-        productsql = text('select * from tb_product where product_id="'+str(row[2])+'"')
+        productsql = text(
+            'select * from tb_product where product_id="'+str(row[2])+'"')
         proresult = db.engine.execute(productsql)
 
-        optsql = text('select * from tb_product_opt where opt_id="'+str(row[4])+'"')
-        optresult = db.engine.execute(optsql)  
+        optsql = text(
+            'select * from tb_product_opt where opt_id="'+str(row[4])+'"')
+        optresult = db.engine.execute(optsql)
 
-        rowdata.append(row[0]) #購買ＩＤ
+        rowdata.append(row[0])  # 購買ＩＤ
         for prorow in proresult:
-            #rowdata.append(prorow[0])
-            rowdata.append(prorow[1]) #價格
+            # rowdata.append(prorow[0])
+            rowdata.append(prorow[1])  # 價格
             for optrow in optresult:
                 rowdata.append(optrow[2])
 
-            rowdata.append(prorow[2]) #數量
+            rowdata.append(prorow[2])  # 數量
 
         rowdata.append(row[3])
-        #rowdata.append(row[3]*prorow[2])
-        #rowdata.append(None)
-
+        # rowdata.append(row[3]*prorow[2])
+        # rowdata.append(None)
 
         data.append(rowdata)
     return {"data": data}
@@ -317,15 +324,14 @@ def editproductimg(lastid, file):
     return {"Status": "Success", "Message": "商品新增成功"}
 
 
-def cartaddto(userid, product_id, product_count, opt): #新增購物車項目
+def cartaddto(userid, product_id, product_count, opt):  # 新增購物車項目
     sql = text("insert into tb_shopcart	(`user_id`,`product_id`,`item_count`,`item_opt`) values ('" +
                str(userid)+"','"+str(product_id)+"','"+str(product_count)+"','"+str(opt)+"')")
     db.engine.execute(sql)
 
 
-def cartdel(id): #刪除購物車項目
+def cartdel(id):  # 刪除購物車項目
     sql = text("delete from `tb_shopcart` where `shopcart_id` = '"+str(id)+"'")
     db.engine.execute(sql)
 
     return {"Status": "Success", "Message": "商品新增成功"}
-

@@ -92,7 +92,25 @@
               />
             </n-form-item>
           </n-form>
-          <n-button type="primary" block secondary strong v-on:click="login"
+
+          <n-button
+            type="primary"
+            @click="handleClickSignIn"
+            :disabled="!Vue3GoogleOauth.isInit || Vue3GoogleOauth.isAuthorized"
+            block
+            secondary
+            strong
+            >Google帳號登入
+          </n-button>
+          <br />
+          <n-button
+            type="primary"
+            block
+            secondary
+            strong
+            v-on:click="
+              login();googlelogin = 0;
+            "
             >登入
           </n-button>
         </n-tab-pane>
@@ -181,6 +199,9 @@
               <n-input
                 v-model:value="signupformValue.account"
                 placeholder="請輸入帳號"
+                :disabled="
+                  !Vue3GoogleOauth.isInit || Vue3GoogleOauth.isAuthorized
+                "
               />
             </n-form-item>
 
@@ -202,11 +223,17 @@
               <n-input
                 v-model:value="signupformValue.email"
                 placeholder="請輸入信箱"
+                :disabled="
+                  !Vue3GoogleOauth.isInit || Vue3GoogleOauth.isAuthorized
+                "
               />
             </n-form-item>
-            
+
             <n-form-item path="password" placeholder="請輸入密碼" label="密碼">
               <n-input
+                :disabled="
+                  !Vue3GoogleOauth.isInit || Vue3GoogleOauth.isAuthorized
+                "
                 v-model:value="signupformValue.password"
                 type="password"
               />
@@ -219,10 +246,13 @@
             >
               <n-input
                 type="password"
+                :disabled="
+                  !Vue3GoogleOauth.isInit || Vue3GoogleOauth.isAuthorized
+                "
                 v-model:value="signupformValue.signupreenteredPassword"
               />
             </n-form-item>
-            
+
             <n-button type="primary" @click="signup()" block secondary strong
               >註冊
             </n-button>
@@ -236,17 +266,23 @@
 <script>
 import { defineComponent, ref } from "vue";
 import { useMessage } from "naive-ui";
+import { inject, toRefs } from "vue";
+import $ from "jquery";
 
 export default defineComponent({
   name: "header",
   components: {},
+  props: {
+    msg: String,
+  },
+
   data() {
     const vailedemail = (rules, value) => {
       //eslint-disable-next-line
       if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(value)) {
-        return true
+        return true;
       } else {
-        return false
+        return false;
       }
     };
     const forformsamepassword = (rules, value) => {
@@ -265,6 +301,7 @@ export default defineComponent({
       }
     };
     return {
+      googlelogin: 0,
       islogin: false,
       resetvaildbutton: false, //重設密碼按鈕是否可案
       resetvaildform: true, //重設密碼欄位是否不可填寫
@@ -277,7 +314,7 @@ export default defineComponent({
         account: "",
         password: "",
         signupreenteredPassword: "",
-        code:"",
+        code: "",
         email: "",
         phone: "",
         age: "",
@@ -376,14 +413,21 @@ export default defineComponent({
       this.islogin = false;
     }
   },
-  setup() {
+  setup(props) {
+    const { isSignIn } = toRefs(props);
+    const Vue3GoogleOauth = inject("Vue3GoogleOauth");
+
     window.$message = useMessage();
     const signupformRef = ref(null); //註冊帳號
     const forvaildformRef = ref(null); //忘記密碼驗證碼表單
     const formresetpasswordRef = ref(null); //重設密碼
     const loginformref = ref(null); //登入表單
 
+    const handleClickLogin = () => {};
     return {
+      Vue3GoogleOauth,
+      handleClickLogin,
+      isSignIn,
       loginformref,
       signupformRef,
       forvaildformRef,
@@ -392,6 +436,28 @@ export default defineComponent({
     };
   },
   methods: {
+    async handleClickSignIn() {
+      try {
+        const googleUser = await this.$gAuth.signIn();
+        if (!googleUser) {
+          return null;
+        }
+
+        //console.log("googleUser", googleUser);
+        this.user = googleUser.getBasicProfile().getEmail();
+        //console.log("getId", this.user);
+        this.googlelogin = 1;
+        this.loginformValue.password = 0;
+        this.loginformValue.account = googleUser.getId();
+        this.signupformValue.email = googleUser.getBasicProfile().getEmail();
+
+        this.login();
+      } catch (error) {
+        //on fail do something
+        console.error(error);
+        return null;
+      }
+    },
     resetpassword() {
       this.formresetpasswordRef.validate((valid) => {
         if (!valid) {
@@ -485,11 +551,11 @@ export default defineComponent({
             })
             .then((ret) => {
               if (ret.Status == "Success") {
-                this.signupformValue.account=""
-                this.signupformValue.password=""
-                this.signupformValue.name=""
-                this.signupformValue.phone=""
-                this.signupformValue.email=""
+                this.signupformValue.account = "";
+                this.signupformValue.password = "";
+                this.signupformValue.name = "";
+                this.signupformValue.phone = "";
+                this.signupformValue.email = "";
 
                 window.$message.success(ret.Message);
               } else {
@@ -501,14 +567,22 @@ export default defineComponent({
         }
       });
     },
-    logout() {
+    async logout() {
+      try {
+        await this.$gAuth.signOut();
+        console.log("isAuthorized", this.Vue3GoogleOauth.isAuthorized);
+        this.user = "";
+      } catch (error) {
+        console.error(error);
+      }
+
       localStorage.removeItem("account");
       this.islogin = false;
       window.$message.success("您已登出");
     },
     login() {
       this.loginformref.validate((valid) => {
-        if (!valid) {
+        if (!valid | this.googlelogin==1) {
           fetch("http://127.0.0.1/api/signin", {
             method: "post",
             headers: {
@@ -516,6 +590,7 @@ export default defineComponent({
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
+              googlelogin: this.googlelogin,
               account: this.loginformValue.account,
               password: this.loginformValue.password,
             }),
@@ -533,7 +608,14 @@ export default defineComponent({
                 this.loginformValue.account = "";
                 this.loginformValue.password = "";
               } else {
-                window.$message.error(ret.Message);
+                if (ret.Status == "GN") {
+                  $(".n-tabs-tab")[2].click();
+                  window.$message.info(ret.Message);
+                  this.signupformValue.signupreenteredPassword = "0";
+                  this.signupformValue.password = "0";
+                } else {
+                  window.$message.error(ret.Message);
+                }
               }
             });
         } else {

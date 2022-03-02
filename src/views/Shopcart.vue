@@ -19,6 +19,8 @@
     </div>
     訂單總金額：{{ amount
     }}<n-card title="">
+        <div role="tw-city-selector" data-bootstrap-style></div>
+
       <n-button type="primary" v-on:click="checkout"> 前往結賬 </n-button>
     </n-card>
   </div>
@@ -66,6 +68,7 @@ import "jquery/dist/jquery.min.js";
 import "datatables.net-dt/js/dataTables.dataTables";
 import "datatables.net-dt/css/jquery.dataTables.min.css";
 import $ from "jquery";
+import TwCitySelector from "tw-city-selector"
 export default defineComponent({
   setup() {
     return {
@@ -79,6 +82,8 @@ export default defineComponent({
     };
   },
   mounted() {
+    new TwCitySelector();
+
     let proxy = this;
     this.refreshmount();
     var table = $("#example").DataTable({
@@ -140,8 +145,6 @@ export default defineComponent({
         });
     },
     checkout() {
-      
-
       var url = "http://localhost/api/pay";
       var form = $(
         '<form style="display:none" action="' +

@@ -78,7 +78,7 @@
   <n-card title="" style="margin-bottom: 16px">
     <n-tabs default-value="oasis" justify-content="space-evenly" type="line">
       <n-tab-pane name="oasis" tab="商品描述">
-        <div class="container">
+        <div class="container" id="product_describe">
           <div class="row" v-html="productdata.product_describe"></div>
         </div>
       </n-tab-pane>
@@ -104,6 +104,8 @@
 }
 </style>
 <script>
+import $ from "jquery";
+
 import { defineComponent, ref } from "vue";
 import { useRoute } from "vue-router";
 import axios from "axios";
@@ -151,6 +153,7 @@ export default defineComponent({
         this.productdata.num = ret.productdata.num;
         this.product_imglist = ret.productdata.product_img;
       });
+      console.log($("img"))
   },
   methods: {
     buyitem() {
