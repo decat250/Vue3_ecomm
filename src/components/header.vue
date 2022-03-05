@@ -36,7 +36,7 @@
             v-if="islogin"
             to="/Userinfo"
             style="text-decoration: none"
-            >{{ account }}test</router-link
+            >{{ account }}</router-link
           >
         </span>
 
@@ -575,7 +575,7 @@ export default defineComponent({
       } catch (error) {
         console.error(error);
       }
-
+      localStorage.removeItem("id");
       localStorage.removeItem("account");
       this.islogin = false;
       window.$message.success("您已登出");
