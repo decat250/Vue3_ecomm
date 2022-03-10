@@ -80,6 +80,7 @@ export default defineComponent({
       localStorage.removeItem("account");
       this.islogin = false;
       window.$message.success("您已登出");
+      
     },
   },
 });

@@ -86,7 +86,13 @@ const routes = [
       nav: () => import('../components/header.vue'),
     }
   },
-
+  {
+    path: '/cvs_get/:CVSStoreID/:CVSStoreName/:CVSAddress',
+    name: 'cvs_get',
+    components: {
+      default: () => import('../views/cvs_get.vue'),
+    }
+  },
   {
     path: '/:catchAll(.*)',
     components: {

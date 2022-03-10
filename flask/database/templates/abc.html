@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Modal dialog sample</title>
+    <script type="text/javascript">
+        function Init () {
+            var sharedObject = window.dialogArguments;
+
+            var forename = document.getElementById ("forename");
+            var surname = document.getElementById ("surname");
+            forename.value = sharedObject.forename;
+            surname.value = sharedObject.surname;
+        }
+
+        function OnOK () {
+            var forename = document.getElementById ("forename");
+            var surname = document.getElementById ("surname");
+
+            if (window.showModalDialog) {
+                var sharedObject = {};
+                sharedObject.forename = forename.value;
+                sharedObject.surname = surname.value;
+
+                window.returnValue = sharedObject;
+            }
+            else {
+                    // if not modal, we cannot use the returnValue property, we need to update the opener window
+                window.opener.UpdateFields (forename.value, surname.value);
+            }
+            window.close ();
+        }
+
+        function OnCancel () {
+            window.close ();
+        }
+    </script>
+<body onload="Init ();">
+    Forename: <input type="text" id="forename"/><br/>
+    Surname: <input type="text" id="surname"/>
+    <br/><br/>
+    <button onclick="OnOK ()">OK</button> <button onclick="OnCancel ()">Cancel</button>
+</body>
+</html>

@@ -109,7 +109,8 @@
             secondary
             strong
             v-on:click="
-              login();googlelogin = 0;
+              login();
+              googlelogin = 0;
             "
             >登入
           </n-button>
@@ -579,10 +580,13 @@ export default defineComponent({
       localStorage.removeItem("account");
       this.islogin = false;
       window.$message.success("您已登出");
+      if (this.$route.name == "Shopcart") {
+        this.$router.push({ path: "/" });
+      }
     },
     login() {
       this.loginformref.validate((valid) => {
-        if (!valid | this.googlelogin==1) {
+        if (!valid | (this.googlelogin == 1)) {
           fetch("http://127.0.0.1/api/signin", {
             method: "post",
             headers: {

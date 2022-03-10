@@ -7,6 +7,9 @@ from multiprocessing.spawn import import_main_path
 import os
 import random
 import shutil
+import requests
+import pprint
+
 import datetime
 from flask import Flask, request, jsonify, redirect, flash, url_for, render_template
 from flask_restful import Api, Resource, reqparse, abort
@@ -57,9 +60,9 @@ def signin():
 
     if(account != None and password != None):
         try:
-            
+
             # 呼叫自己寫的函數來處理，Class login放在database/api裡面
-            r = login(account, password,googlelogin)
+            r = login(account, password, googlelogin)
 
             return r
 
@@ -288,23 +291,26 @@ def editproduct():
         r = editproductimg(lastid, out)
         return {"Status": "Success", "Message": "商品修改成功"}
 
+
 @app.route('/api/addtocart', methods=['GET', 'POST'])  # 編輯商品
 def addtocart():
     if request.method == 'POST':
-        
+
         userid = request.form['userid']
         opt = request.form['selopt']
         product_id = request.form['product_id']
-        product_count= request.form['product_count']
+        product_count = request.form['product_count']
 
-        r = cartaddto(userid,product_id,product_count,opt)
+        r = cartaddto(userid, product_id, product_count, opt)
         return {"Status": "Success", "Message": "商品已成功加入購物車"}
+
 
 @app.route('/api/getshopcart/<userid>', methods=['GET', 'POST'])  # 取得購物車內容
 def getshopcart(userid):
     if request.method == 'GET':
         r = shopcartget(userid)
         return r
+
 
 @app.route('/api/delcart', methods=['GET', 'POST'])  # banner照片編輯
 def delcart():
@@ -315,7 +321,8 @@ def delcart():
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
-@app.route('/api/pay', methods=['GET', 'POST'])  # 編輯商品
+
+@app.route('/api/pay', methods=['GET', 'POST'])
 def pay():
 
     TotalAmount = request.form['TotalAmount']
@@ -429,8 +436,133 @@ def pay():
 
         # 產生 html 的 form 格式
         action_url = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5'  # 測試環境
-        html = ecpay_payment_sdk.gen_html_post_form(action_url, final_order_params)
+        html = ecpay_payment_sdk.gen_html_post_form(
+            action_url, final_order_params)
         return (html)
+    except Exception as error:
+        print('An exception happened: ' + str(error))
+
+
+@app.route('/api/cvs/<LogisticsSubType>', methods=['GET', 'POST'])
+def cvs(LogisticsSubType):
+    
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "ecpay_logistic_sdk",
+        "/Users/decat/Vue3_ecomm/flask/ecpay_logistic_sdk.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    cvs_map_params = {
+        "MerchantID": "2000132",
+        "MerchantTradeNo": "anyno",
+        "LogisticsType": "CVS",
+        # 若申請類型為 B2C，只能串參數為 FAMI、UNIMART、HILIFE
+        # 若申請類型為 C2C，只能串參數為 FAMIC2C、UNIMARTC2C、HILIFEC2C
+        "LogisticsSubType": LogisticsSubType,
+        "IsCollection": "N",
+        "ServerReplyURL": "http://localhost/api/cvs_get",
+        "ExtraData": "額外資訊",
+        "Device": module.Device['PC'],
+    }
+
+    # 建立實體
+    ecpay_logistic_sdk = module.ECPayLogisticSdk(
+        MerchantID='2000933',
+        HashKey='XBERn1YOvpM9nfZc',
+        HashIV='h1ONHk4P4yqbl5LK'
+    )
+
+    try:
+        # 產生綠界物流訂單所需參數
+        final_params = ecpay_logistic_sdk.cvs_map(cvs_map_params)
+
+        # 產生 html 的 form 格式
+        action_url = 'https://logistics-stage.ecpay.com.tw/Express/map'  # 測試環境
+        # action_url = 'https://logistics.ecpay.com.tw/Express/map' # 正式環境
+        html = ecpay_logistic_sdk.gen_html_post_form(action_url, final_params)
+        return (html)
+    except Exception as error:
+        print('An exception happened: ' + str(error))
+
+
+@app.route('/api/cvs_get', methods=['GET', 'POST'])
+def cvs_get():
+    return redirect("http://localhost:8080/#/cvs_get/"+request.form['CVSStoreID']+"/"+request.form['CVSStoreName']+"/"+request.form['CVSAddress'], code=302)
+
+
+
+@app.route('/api/cvs_home', methods=['GET', 'POST'])
+def csv_home():
+    spec = importlib.util.spec_from_file_location(
+        "ecpay_logistic_sdk",
+        "/Users/decat/Vue3_ecomm/flask/ecpay_logistic_sdk.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    from datetime import datetime
+
+    create_shipping_order_params = {
+        'MerchantTradeNo': datetime.now().strftime("NO%Y%m%d%H%M%S"),
+        'MerchantTradeDate': datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
+        'LogisticsType': module.LogisticsType['HOME'],
+        'LogisticsSubType': module.LogisticsSubType['TCAT'],
+        'GoodsAmount': 1500,
+        'CollectionAmount': 1500,
+        'IsCollection': module.IsCollection['NO'],
+        'GoodsName': '測試商品',
+        'SenderName': '測試寄件者',
+        'SenderPhone': '0226550115',
+        'SenderCellPhone': '0911222333',
+        'ReceiverName': '測試收件者',
+        'ReceiverPhone': '0226550115',
+        'ReceiverCellPhone': '0933222111',
+        'ReceiverEmail': 'test@gmail.com',
+        'TradeDesc': '測試交易敘述',
+        'ServerReplyURL': 'https://www.ecpay.com.tw/server_reply_url',
+        'ClientReplyURL': '',
+        'Remark': '測試備註',
+        'PlatformID': '',
+        'LogisticsC2CReplyURL': 'https://www.ecpay.com.tw/logistics_c2c_reply',
+    }
+
+    shipping_home_params = {
+        'SenderZipCode': '11560',
+        'SenderAddress': '台北市南港區三重路19-2號10樓D棟',
+        'ReceiverZipCode': '11560',
+        'ReceiverAddress': '台北市南港區三重路19-2號5樓D棟',
+        'Temperature': module.Temperature['FREEZE'],
+        'Distance': module.Distance['SAME'],
+        'Specification': module.Specification['CM_120'],
+        'ScheduledPickupTime': module.ScheduledPickupTime['TIME_17_20'],
+        'ScheduledDeliveryTime': module.ScheduledDeliveryTime['TIME_17_20'],
+        'ScheduledDeliveryDate': '',
+        'PackageCount': '',
+    }
+
+    # 更新及合併參數
+    create_shipping_order_params.update(shipping_home_params)
+
+    # 建立實體
+    ecpay_logistic_sdk = module.ECPayLogisticSdk(
+        MerchantID='2000933',
+        HashKey='XBERn1YOvpM9nfZc',
+        HashIV='h1ONHk4P4yqbl5LK'
+    )
+
+    try:
+        # 介接路徑
+        action_url = 'https://logistics-stage.ecpay.com.tw/Express/Create'  # 測試環境
+        # action_url = 'https://logistics.ecpay.com.tw/Express/Create' # 正式環境
+
+        # 建立物流訂單並接收回應訊息
+        reply_result = ecpay_logistic_sdk.create_shipping_order(
+            action_url=action_url,
+            client_parameters=create_shipping_order_params)
+        return (reply_result)
+
     except Exception as error:
         print('An exception happened: ' + str(error))
 

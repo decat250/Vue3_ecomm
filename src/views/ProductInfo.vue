@@ -153,10 +153,16 @@ export default defineComponent({
         this.productdata.num = ret.productdata.num;
         this.product_imglist = ret.productdata.product_img;
       });
-      console.log($("img"))
+    console.log($("img"));
   },
   methods: {
     buyitem() {
+      const isLogin = localStorage.getItem("account");
+
+      if (isLogin == null) {
+        window.$message.error("您尚未登入");
+        return;
+      }
       const formData = new FormData();
       formData.append("product_id", this.product_id);
       formData.append("selopt", this.selopt);
@@ -176,6 +182,12 @@ export default defineComponent({
       this.productdata.product_img = $event.currentTarget.src;
     },
     addtocard() {
+      const isLogin = localStorage.getItem("account");
+      if (isLogin == null) {
+        window.$message.error("您尚未登入");
+        return;
+      }
+      
       const formData = new FormData();
       formData.append("product_id", this.product_id);
       formData.append("selopt", this.selopt);
