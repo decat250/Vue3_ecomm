@@ -1,11 +1,12 @@
 <template>
   <div class="home">
     <n-carousel autoplay show-dots="false">
-      <img v-for="item in bannerimg" v-bind:key="item.banner_id"
+      <img
+        v-for="item in bannerimg"
+        v-bind:key="item.banner_id"
         class="carousel-img"
         v-bind:src="item.item"
       />
-      
     </n-carousel>
     <n-space vertical>
       <n-layout has-sider>
@@ -34,7 +35,7 @@
             <div class="row" style="margin-top: 10px">
               <router-link
                 :to="`/ProductInfo/${item.product_id}`"
-                v-for="item in productlist"
+                v-for="item in productlistshow"
                 v-bind:key="item.id"
                 class="col-4"
                 style="text-decoration: none"
@@ -57,12 +58,19 @@
                   >
                 </n-card>
               </router-link>
-
+              
               <div
-                class="col-12 text-center"
-                style="margin-top: 30px; margin-buttom: 100px"
+                class="col-12"
+                style="margin-top: 30px; margin-left: auto;margin-right: auto;"
               >
-                <n-pagination v-model:page="page" :page-count="100" />
+
+                <n-pagination
+                  v-model:page="page"
+                  @update:page="showitem"
+                  :page-count="totalpage"
+                  show-quick-jumper
+                  
+                />
               </div></div
           ></span>
         </n-layout>
@@ -102,21 +110,14 @@ const menuOptions = [
 export default defineComponent({
   data() {
     return {
-      bannerimg:[],
-      productlist: [
-        {
-          product_count: "30",
-          product_id: "1",
-          product_img:
-            "https://shoplineimg.com/54a230f9e37ec655ce00000d/6204d657a1efde0a05bacba7/800x.webp?source_format=jpg",
-          product_name:
-            "\u3010\u9810\u8cfc\u3011\u53e3\u888b\u76f8\u7c3f\u4e09\u4ee3Piconizer3 128G \u73ab\u7470\u91d1 \u2605\u9001\u4fdd\u8b77\u5957\uff06\u8f49\u63a5\u982d",
-          product_price: "1000",
-        },
-       
-      ],
+      totalpage:0,
+      page: 1,
+      bannerimg: [],
+      productlist: [],
+      productlistshow: [],
     };
   },
+
   setup() {
     return {
       menuOptions,
@@ -141,10 +142,36 @@ export default defineComponent({
         return data.json();
       })
       .then((ret) => {
-        console.log(ret)
-        this.bannerimg = ret.bannerimg
+        this.bannerimg = ret.bannerimg;
         this.productlist = ret.productlist;
+        this.totalpage = ret.page
+        var data = [];
+        for (var j = 0; j < 1 * 10; j++) {
+          data.push(this.productlist[j]);
+        }
+        this.productlistshow = data;
+        //this.productlistshow = ret.productlist;
       });
+  },
+  methods: {
+    showitem() {
+      var data = [];
+      if (this.page == this.totalpage) {
+        for (var i = (this.page - 1) * 10; i < this.productlist.length; i++) {
+          data.push(this.productlist[i]);
+        }
+      } else if (this.page == 1) {
+        for (var j = 0; j < this.page * 10; j++) {
+          data.push(this.productlist[j]);
+        }
+      } else {
+        for (var z = (this.page - 1) * 10; z < this.page * 10; z++) {
+          data.push(this.productlist[z]);
+        }
+      }
+
+      this.productlistshow = data;
+    },
   },
 });
 </script>

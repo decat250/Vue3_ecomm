@@ -45,6 +45,10 @@ const menuOptions = [
     label: "商品頁banner管理",
     key: "banner",
   },
+  {
+    label: "商品類別管理",
+    key: "type",
+  },
 ];
 
 export default defineComponent({

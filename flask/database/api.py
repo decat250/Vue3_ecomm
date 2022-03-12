@@ -167,7 +167,7 @@ def productgetlist():  # 首頁取得商品
             imgsrc = imgrow[2]
         data.append({"product_id": str(row[0]), "product_name": str(row[1]), "product_price": str(
             row[2]), "product_count": str(row[3]), "product_img": str(imgsrc)})
-    return {"Status": "Success", "productlist": data, "bannerimg": banner}
+    return {"Status": "Success", "productlist": data, "bannerimg": banner,"page":int(len(data)/10)+1}
 
 
 def infogetproduct(id):  # 商品頁取得內容

@@ -30,7 +30,11 @@ const routes = [
       {
         path: "banner",
         component: () => import("../views/adm/banner.vue")
-      }
+      },
+      {
+        path: "type",
+        component: () => import("../views/adm/type.vue")
+      },
     ]
   },
   {

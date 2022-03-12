@@ -9,7 +9,6 @@ import random
 import shutil
 import requests
 import pprint
-
 import datetime
 from flask import Flask, request, jsonify, redirect, flash, url_for, render_template
 from flask_restful import Api, Resource, reqparse, abort
@@ -324,7 +323,18 @@ def delcart():
 
 @app.route('/api/pay', methods=['GET', 'POST'])
 def pay():
+    userid = request.form['userid']
+    print(userid)
+    import time
+    date = time.time()
+    tid = str(date) + 'Uid' + str(userid)
+    print(tid)
+    print(request.form['name'])
+    print(request.form['phone'])
+    print(request.form['address'])
+    print(request.form['ordermark'])
 
+    
     TotalAmount = request.form['TotalAmount']
     ItemName = request.form['ItemName']
     import importlib.util
@@ -334,19 +344,18 @@ def pay():
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    from datetime import datetime
 
     order_params = {
-        'MerchantTradeNo': datetime.now().strftime("NO%Y%m%d%H%M%S"),
+        'MerchantTradeNo': datetime.datetime.now().strftime("NO%Y%m%d%H%M%S"),
         'StoreID': '',
-        'MerchantTradeDate': datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
+        'MerchantTradeDate': datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
         'PaymentType': 'aio',
         'TotalAmount': TotalAmount,
         'TradeDesc': '訂單測試',
         'ItemName': ItemName,
         'ReturnURL': 'http://127.0.0.1/test',
         'ChoosePayment': 'ALL',
-        'ClientBackURL': 'https://www.ecpay.com.tw/client_back_url.php',
+        'ClientBackURL': 'http://localhost:8080/#/',
         'ItemURL': 'https://www.ecpay.com.tw/item_url.php',
         'Remark': '交易備註',
         'ChooseSubPayment': '',
@@ -445,7 +454,7 @@ def pay():
 
 @app.route('/api/cvs/<LogisticsSubType>', methods=['GET', 'POST'])
 def cvs(LogisticsSubType):
-    
+
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "ecpay_logistic_sdk",
@@ -492,7 +501,6 @@ def cvs_get():
     return redirect("http://localhost:8080/#/cvs_get/"+request.form['CVSStoreID']+"/"+request.form['CVSStoreName']+"/"+request.form['CVSAddress'], code=302)
 
 
-
 @app.route('/api/cvs_home', methods=['GET', 'POST'])
 def csv_home():
     spec = importlib.util.spec_from_file_location(
@@ -501,8 +509,6 @@ def csv_home():
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-
-    from datetime import datetime
 
     create_shipping_order_params = {
         'MerchantTradeNo': datetime.now().strftime("NO%Y%m%d%H%M%S"),
