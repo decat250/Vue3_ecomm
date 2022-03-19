@@ -58,18 +58,16 @@
                   >
                 </n-card>
               </router-link>
-              
+
               <div
                 class="col-12"
-                style="margin-top: 30px; margin-left: auto;margin-right: auto;"
+                style="margin-top: 30px; margin-left: auto; margin-right: auto"
               >
-
                 <n-pagination
                   v-model:page="page"
                   @update:page="showitem"
                   :page-count="totalpage"
                   show-quick-jumper
-                  
                 />
               </div></div
           ></span>
@@ -89,38 +87,26 @@
 <script>
 import { h, defineComponent } from "vue";
 
-const menuOptions = [
-  {
-    label: "全部商品",
-    key: "a",
-  },
-  {
-    label: "【新品上市】口袋相簿3代",
-    key: "b",
-  },
-  {
-    label: "Qubii備份豆腐全系列",
-    key: "c",
-  },
-  {
-    label: "Hear the Wind Sing",
-    key: "d",
-  },
-];
+
 export default defineComponent({
   data() {
     return {
-      totalpage:0,
+      totalpage: 0,
       page: 1,
       bannerimg: [],
       productlist: [],
+      menuOptions: [
+        {
+          label: "Hear the Wind Sing",
+          key: "d",
+        },
+      ],
       productlistshow: [],
     };
   },
 
   setup() {
     return {
-      menuOptions,
       renderMenuLabel(option) {
         console.log(option);
         if ("href" in option) {
@@ -131,7 +117,7 @@ export default defineComponent({
     };
   },
   mounted() {
-    fetch("http://127.0.0.1/api/getproductlist", {
+    fetch("http://127.0.0.1/api/getproductlist/null", {
       method: "get",
       headers: {
         Accept: "application/json",
@@ -142,13 +128,16 @@ export default defineComponent({
         return data.json();
       })
       .then((ret) => {
+        this.menuOptions = ret.type
         this.bannerimg = ret.bannerimg;
         this.productlist = ret.productlist;
-        this.totalpage = ret.page
+        this.totalpage = ret.page;
+        console.log(ret.productlist.length);
         var data = [];
-        for (var j = 0; j < 1 * 10; j++) {
+        for (var j = 0; j < ret.productlist.length; j++) {
           data.push(this.productlist[j]);
         }
+        console.log(data);
         this.productlistshow = data;
         //this.productlistshow = ret.productlist;
       });
@@ -156,6 +145,7 @@ export default defineComponent({
   methods: {
     showitem() {
       var data = [];
+
       if (this.page == this.totalpage) {
         for (var i = (this.page - 1) * 10; i < this.productlist.length; i++) {
           data.push(this.productlist[i]);

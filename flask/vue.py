@@ -34,6 +34,12 @@ from database.api import editproductimg
 from database.api import cartaddto
 from database.api import shopcartget
 from database.api import cartdel
+from database.api import get_type
+from database.api import del_type
+from database.api import new_type
+from database.api import change_type
+from database.api import typecont_get
+from database.api import typecont_change
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -144,12 +150,12 @@ def resetpwd():  # 重設密碼
         return {"Status": "Failed", "Return": str(e)}
 
 
-@app.route('/api/getproductlist', methods=['GET'])  # 首頁取得商品
-def getproductlist():
+@app.route('/api/getproductlist/<typeid>', methods=['GET'])  # 首頁取得商品
+def getproductlist(typeid):
+    print(typeid)
     try:
-        r = productgetlist()
+        r = productgetlist(typeid)
         return r
-
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
@@ -207,7 +213,6 @@ def bannering():
         out = []
 
         for files in file:
-            print(files.filename)
             filename = (files.filename.split(".")[1])
             # filename = secure_filename(file.filename)
             newfilename = createRandomString(20)
@@ -495,6 +500,62 @@ def cvs(LogisticsSubType):
     except Exception as error:
         print('An exception happened: ' + str(error))
 
+@app.route('/api/type_get', methods=['GET', 'POST']) #標籤管理＿取得標籤
+def type_get():
+    try:
+        r = get_type()
+        return {"Status": "Success", "data": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/type_del', methods=['GET', 'POST'])  #標籤管理）刪除標籤
+def type_del():
+    typeid = request.form['typeid']
+    try:
+        r = del_type(typeid)
+        return {"Status": "Success", "Message": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+        
+@app.route('/api/type_new', methods=['GET', 'POST'])  #標籤管理 新增標籤
+def type_new():
+    type = request.form['type']
+    try:
+        r = new_type(type)
+        return {"Status": "Success", "Message": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/type_change', methods=['GET', 'POST'])  #標籤管理 變更標籤
+def type_change():
+    typeid = request.form['typeid']
+    type = request.form['type']
+
+    try:
+        r = change_type(typeid,type)
+        return {"Status": "Success", "Message": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/get_typecont', methods=['GET', 'POST'])  #標籤管理 取得標籤內商品
+def get_typecont():
+    typeid = request.form['typeid']
+    try:
+        r = typecont_get(typeid)
+        return {"Status": "Success", "data": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/change_typecont', methods=['GET', 'POST'])  #標籤管理 變更標籤內商品
+def change_typecont():
+    typeid = request.form['typeid']
+    productlist = request.form['productlist']
+    data=productlist.split(",")
+    try:
+        r = typecont_change(typeid,data)
+        return {"Status": "Success", "Message": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
 
 @app.route('/api/cvs_get', methods=['GET', 'POST'])
 def cvs_get():

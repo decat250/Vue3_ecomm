@@ -73,7 +73,7 @@ export default defineComponent({
     };
   },
   mounted() {
-    fetch("http://127.0.0.1/api/getproductlist", {
+    fetch("http://127.0.0.1/api/getproductlist/null", {
       method: "get",
       headers: {
         Accept: "application/json",

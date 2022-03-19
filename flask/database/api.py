@@ -4,7 +4,9 @@
 from operator import le
 import re
 from this import d
+from typing_extensions import runtime
 from unicodedata import name
+from unittest import result
 from sqlalchemy import create_engine, and_, exc, Integer, ForeignKey, String, Column
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import case
@@ -148,13 +150,15 @@ def pwdreset(id, code, password):
         return {"Status": "Success", "Message": "密碼已修改"}
 
 
-def productgetlist():  # 首頁取得商品
+def productgetlist(typeid):  # 首頁取得商品
+    print(typeid)
     sql = text('select * from tb_banner')
     result = db.engine.execute(sql)
     banner = []
     for row in result:
         banner.append(
             {"banner_id": str(row[0]), "item": "http://localhost/shop/banner/"+str(row[1])})
+   
     sql = text('select * from tb_product')
     result = db.engine.execute(sql)
     data = []
@@ -167,7 +171,11 @@ def productgetlist():  # 首頁取得商品
             imgsrc = imgrow[2]
         data.append({"product_id": str(row[0]), "product_name": str(row[1]), "product_price": str(
             row[2]), "product_count": str(row[3]), "product_img": str(imgsrc)})
-    return {"Status": "Success", "productlist": data, "bannerimg": banner,"page":int(len(data)/10)+1}
+    producttype= db.engine.execute("SELECT * FROM `tb_producttype`")
+    type=[]
+    for row in producttype:
+        type.append({"label":str(row[1]),"key":str(row[0])})
+    return {"Status": "Success", "productlist": data, "bannerimg": banner,"page":int(len(data)/10)+1,"type":type}
 
 
 def infogetproduct(id):  # 商品頁取得內容
@@ -335,3 +343,50 @@ def cartdel(id):  # 刪除購物車項目
     db.engine.execute(sql)
 
     return {"Status": "Success", "Message": "商品新增成功"}
+
+def get_type():
+    type = text("select * from tb_producttype")
+    result = db.engine.execute(type)
+
+    typedata=[]
+    for row in result:
+        typedata.append({'label':row[1],'value':row[0]})
+
+    product_data=[]
+    product = text("select * from tb_product")
+    result = db.engine.execute(product)
+    for row in result:
+        product_data.append({'label':row[1],'value':row[0]})
+
+    return typedata,product_data
+
+def del_type(typeid): #刪除標籤
+    type = text("delete from tb_producttype where type_id = '"+str(typeid)+"'")
+    db.engine.execute(type)
+    return "刪除標籤成功"
+
+def new_type(type): #新增標籤
+    type = text("insert into tb_producttype (`type_name`) VALUES ('"+str(type)+"')")
+    db.engine.execute(type)
+    return "新增標籤成功"
+
+def change_type(typeid,type): #修改標籤
+    type = text("update tb_producttype set `type_name` = '"+str(type)+"' where `type_id` = '"+typeid+"'")
+    db.engine.execute(type)
+    return "修改標籤名稱成功"
+
+def typecont_get(typeid): #取得標籤內商品內容
+    type = text("select * from tb_typecont where `type_id` = '"+str(typeid)+"'")
+    result = db.engine.execute(type)
+    data=[]
+    for row in result:
+        data.append(row[2])
+    return data
+
+def typecont_change(typeid,data): #取得標籤內商品內容
+    db.engine.execute("delete from tb_typecont where type_id = '"+str(typeid)+"'")
+    if len(data) == 0:
+        return "修改成功"
+    for i in data:
+        db.engine.execute("insert into tb_typecont (`type_id`,`product_id`) value ('"+str(typeid)+"','"+str(i)+"')")
+    return "修改成功"

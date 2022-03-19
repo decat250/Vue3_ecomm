@@ -17,5 +17,5 @@ print(r.json())
 
 
 my_data = {'id': '1','code':"2t94y","password":"sdsd123"}
-r = requests.post('http://localhost/api/resetpwd', data = my_data)
+r = requests.post('http://localhost/api/type_get', data = my_data)
 print(r.json())
