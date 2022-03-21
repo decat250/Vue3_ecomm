@@ -21,13 +21,11 @@
           @expand="true"
         >
           <n-menu
+            @update:value="test"
             :collapsed="collapsed"
             :collapsed-width="64"
             :collapsed-icon-size="22"
             :options="menuOptions"
-            :render-label="renderMenuLabel"
-            :render-icon="renderMenuIcon"
-            :expand-icon="expandIcon"
           />
         </n-layout-sider>
         <n-layout>
@@ -85,7 +83,7 @@
 }
 </style>
 <script>
-import { h, defineComponent } from "vue";
+import {  defineComponent } from "vue";
 
 
 export default defineComponent({
@@ -100,21 +98,15 @@ export default defineComponent({
           label: "Hear the Wind Sing",
           key: "d",
         },
+       
       ],
       productlistshow: [],
+      
     };
   },
 
   setup() {
-    return {
-      renderMenuLabel(option) {
-        console.log(option);
-        if ("href" in option) {
-          return h("a", { href: option.href, target: "_blank" }, option.label);
-        }
-        return option.label;
-      },
-    };
+    
   },
   mounted() {
     fetch("http://127.0.0.1/api/getproductlist/null", {
@@ -143,6 +135,33 @@ export default defineComponent({
       });
   },
   methods: {
+    test(value)
+    {
+      fetch("http://127.0.0.1/api/getproductlist/"+value, {
+      method: "get",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    })
+      .then((data) => {
+        return data.json();
+      })
+      .then((ret) => {
+        this.menuOptions = ret.type
+        this.bannerimg = ret.bannerimg;
+        this.productlist = ret.productlist;
+        this.totalpage = ret.page;
+        console.log(ret.productlist.length);
+        var data = [];
+        for (var j = 0; j < ret.productlist.length; j++) {
+          data.push(this.productlist[j]);
+        }
+        console.log(data);
+        this.productlistshow = data;
+        //this.productlistshow = ret.productlist;
+      });
+    },
     showitem() {
       var data = [];
 

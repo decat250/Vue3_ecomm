@@ -152,7 +152,6 @@ def resetpwd():  # 重設密碼
 
 @app.route('/api/getproductlist/<typeid>', methods=['GET'])  # 首頁取得商品
 def getproductlist(typeid):
-    print(typeid)
     try:
         r = productgetlist(typeid)
         return r

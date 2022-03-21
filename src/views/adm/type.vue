@@ -15,7 +15,7 @@
       @update:value="selecttype"
     />
 
-    <n-button class="col-2" type="error" v-on:click="deltype"
+    <n-button class="col-2" type="error" v-on:click="deltype" v-bind:disabled="value==null"
       >刪除目前選擇標籤</n-button
     >
     <div class="col-10" style="margin-top: 10px">

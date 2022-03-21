@@ -127,7 +127,6 @@ def sendvaildresetpwd(account, email):  # 重設密碼接收驗證碼
 
 
 def pwdreset(id, code, password):
-
     sql = text('select * from tb_vaildcode where User_id="' +
                str(id)+'" and Vaildcode_code="'+str(code)+'"')
     result = db.engine.execute(sql)
@@ -158,8 +157,12 @@ def productgetlist(typeid):  # 首頁取得商品
     for row in result:
         banner.append(
             {"banner_id": str(row[0]), "item": "http://localhost/shop/banner/"+str(row[1])})
-   
-    sql = text('select * from tb_product')
+    
+    #sql = text('select * from tb_product')
+    if typeid =="null":
+        sql = text("select * from tb_product")
+    else:
+        sql = text("select tb_product.product_id,tb_product.product_name,tb_product.product_price,tb_product.product_count FROM `tb_typecont` inner JOIN `tb_product` on tb_typecont.product_id = tb_product.product_id where tb_typecont.type_id = '"+str(typeid)+"'")
     result = db.engine.execute(sql)
     data = []
     for row in result:
@@ -171,15 +174,18 @@ def productgetlist(typeid):  # 首頁取得商品
             imgsrc = imgrow[2]
         data.append({"product_id": str(row[0]), "product_name": str(row[1]), "product_price": str(
             row[2]), "product_count": str(row[3]), "product_img": str(imgsrc)})
+   
     producttype= db.engine.execute("SELECT * FROM `tb_producttype`")
     type=[]
+
+    type.append({"label":"全部商品","key":"null"})
     for row in producttype:
         type.append({"label":str(row[1]),"key":str(row[0])})
     return {"Status": "Success", "productlist": data, "bannerimg": banner,"page":int(len(data)/10)+1,"type":type}
 
 
 def infogetproduct(id):  # 商品頁取得內容
-
+    
     sql = text('select * from tb_product where product_id="'+str(id)+'"')
     result = db.engine.execute(sql)
     data = {}
