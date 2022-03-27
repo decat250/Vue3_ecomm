@@ -2,20 +2,35 @@
   <div class="container">
     購物車商品
     <div class="row">
-      <table class="table table-hover table-bordered" id="example">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>名稱</th>
-            <th>規格</th>
-            <th>單價</th>
-            <th>數量</th>
-
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <vue-good-table
+        :search-options="{ enabled: true }"
+        :columns="columns"
+        :rows="rows"
+        :paginate="true"
+        :lineNumbers="true"
+        :globalSearch="true"
+      >
+        <template #table-row="props">
+          <span v-if="props.column.field == 'edit'">
+            <n-button type="primary" v-on:click="del(props.row.id)">
+              刪除
+            </n-button>
+          </span>
+          <span v-if="props.column.field == 'count'">
+            <n-input-number
+              min="1"
+              max="50"
+              v-model:max="props.row.maxcount"
+              v-model:value="props.row.count"
+              @update:value="counthandleChange(props.row.id, props.row.count)"
+              
+            />
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
+        </template>
+      </vue-good-table>
     </div>
 
     <div class="row vertical-center">
@@ -142,8 +157,7 @@
     id="deletebtn"
     style="display: None"
     @click="showDeleteModalRef = true"
-    >123</n-button
-  >
+  ></n-button>
 </template>
 <style>
 .testimonial-group > .row {
@@ -163,15 +177,22 @@
 }
 </style>
 <script>
-import { defineComponent, ref } from "vue";
+import { VueGoodTable } from "vue-good-table-next";
+import "vue-good-table-next/dist/vue-good-table-next.css";
+import $ from "jquery";
+
+import { ref } from "vue";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "jquery/dist/jquery.min.js";
-import "datatables.net-dt/js/dataTables.dataTables";
-import "datatables.net-dt/css/jquery.dataTables.min.css";
-import $ from "jquery";
+
+//import $ from "jquery";
 import TwCitySelector from "tw-city-selector";
-export default defineComponent({
+export default {
+  name: "Table",
+  components: {
+    VueGoodTable,
+  },
   setup() {
     return {
       showDeleteModalRef: ref(false),
@@ -188,7 +209,7 @@ export default defineComponent({
       selectaddress: "",
       name: "",
       phone: "",
-      ordermark:"",
+      ordermark: "",
       options: [
         {
           label: "請選擇取貨方式",
@@ -237,6 +258,48 @@ export default defineComponent({
         { label: "連江縣", value: 21 },
       ],
       districts: [],
+      columns: [
+        {
+          label: "商品名稱",
+          field: "name",
+          tdClass: "text-center",
+        },
+        {
+          label: "價格",
+          field: "price",
+          type: "number",
+          tdClass: "text-center",
+          globalSearchDisabled: true,
+        },
+        {
+          label: "規格",
+          field: "option",
+          tdClass: "text-center",
+          globalSearchDisabled: true,
+        },
+        {
+          label: "購買數量",
+          field: "count",
+          type: "number",
+          tdClass: "text-center",
+          globalSearchDisabled: true,
+        },
+        {
+          label: "小計",
+          field: "tot",
+          type: "number",
+          tdClass: "text-center",
+          globalSearchDisabled: true,
+        },
+
+        {
+          label: "移除商品",
+          field: "edit",
+          tdClass: "text-center",
+          globalSearchDisabled: true,
+        },
+      ],
+      rows: [],
     };
   },
   mounted() {
@@ -252,34 +315,46 @@ export default defineComponent({
 
     new TwCitySelector();
 
-    let proxy = this;
-    this.refreshmount();
-    var table = $("#example").DataTable({
-      ajax: "http://localhost/api/getshopcart/" + localStorage.getItem("id"),
-      columnDefs: [
-        {
-          targets: [0],
-          visible: false,
-        },
-        {
-          targets: [1],
-        },
-        {
-          targets: [2],
-        },
-        {
-          targets: [5],
-          defaultContent: "<button id='del'>刪除</button>",
-        },
-      ],
-    });
-    $("#example tbody").on("click", "button", function () {
-      var data = table.row($(this).parents("tr")).data();
-      document.getElementById("deletebtn").click();
-      proxy.editid = data[0];
-    });
+    //let proxy = this;
+    this.load();
   },
   methods: {
+    counthandleChange(id, count) {
+      const formData = new FormData();
+      formData.append("id", id);
+      formData.append("count", count);
+      axios
+        .post("http://localhost/api/changeshopcartcount", formData, {})
+        .then((res) => {
+          console.log(res)
+          if (res.data.Status=="Success")
+          {
+            this.load()
+          }
+        });
+    },
+    load() {
+      axios
+        .get(
+          "http://localhost/api/getshopcart/" + localStorage.getItem("id"),
+          {}
+        )
+        .then((res) => {
+          this.rows = res.data.data;
+          this.amount = res.data.total
+          console.log(res.data.data)
+          for (var j=0;j<res.data.data.length;j++)
+          {
+            console.log(res.data.data[j].name)
+            this.item+=res.data.data[j].name+"\n"
+          }
+          console.log(this.item)
+        });
+    },
+    del(id) {
+      document.getElementById("deletebtn").click();
+      this.editid = id;
+    },
     test() {
       var data = [
         [
@@ -724,7 +799,7 @@ export default defineComponent({
       this.selectdistricts = "請選擇";
     },
     selectcvs() {
-      console.log(this.select);
+      console.log(this);
       if (this.select == 1) {
         window.open(
           "http://localhost/api/cvs/UNIMARTC2C",
@@ -752,30 +827,17 @@ export default defineComponent({
       axios.post("http://localhost/api/delcart", formData, {}).then((res) => {
         if (res.data.Status == "Success") {
           window.$message.success(res.data.Message);
-          $("#example").DataTable().ajax.reload();
-          this.refreshmount();
           this.showDeleteModalRef = false;
+          this.load();
         }
       });
     },
     onNegativeClick() {
       this.showDeleteModalRef = false;
     },
-    refreshmount() {
-      this.amount = 0;
-      axios
-        .get(
-          "http://localhost/api/getshopcart/" + localStorage.getItem("id"),
-          {}
-        )
-        .then((res) => {
-          for (var i = 0; i < res.data.data.length; i++) {
-            this.amount += res.data.data[i][3] * res.data.data[i][4];
-            this.item += res.data.data[i][1] + "x" + res.data.data[i][4] + "#";
-          }
-        });
-    },
+    
     checkout() {
+     
       var data = [
         "台北市",
         "基隆市",
@@ -800,21 +862,32 @@ export default defineComponent({
         "花蓮縣",
         "連江縣",
       ];
-      console.log(this.name);
-      console.log(this.phone);
-      var address = ""
-      if (this.selectcvst == 4)
+
+      var address = "";
+      if (this.selectcvst == 4) {
+        address =
+          data[this.selectcounties] + this.selectdistricts + this.selectaddress;
+      } else {
+        address = $($("#CVSAddress")[0]).html().split("：")[1];
+      }
+      var order_LogisticsType="32";
+      if (this.select == 1)
       {
-        address = data[this.selectcounties] + this.selectdistricts + this.selectaddress
+        order_LogisticsType = "7-11超商取貨"
+      }
+      else if (this.select == 2)
+      {
+        order_LogisticsType = "全家超商取貨"
+      }else if (this.select == 3)
+      {
+        order_LogisticsType = "萊爾富超商取貨"
       }
       else
       {
-        address= $($("#CVSAddress")[0]).html().split("：")[1]
+        order_LogisticsType = "宅配"
       }
-      
-      
-      console.log(this.ordermark)
-
+      this.item="test"
+      console.log(order_LogisticsType)
       var url = "http://localhost/api/pay";
       var form = $(
         '<form style="display:none" action="' +
@@ -824,7 +897,7 @@ export default defineComponent({
           this.amount +
           '" />' +
           '<input type="text" name="ItemName" value="' +
-          this.item +
+          "test" +
           '" />' +
           '<input type="text" name="userid" value="' +
           localStorage.getItem("id") +
@@ -836,17 +909,22 @@ export default defineComponent({
           this.phone +
           '" />' +
           '<input type="text" name="address" value="' +
-          address+
+          address +
           '" />' +
           '<input type="text" name="ordermark" value="' +
-          this.ordermark+
+          this.ordermark +
+          '" />' +
+          '<input type="text" name="Logistics" value="' +
+          order_LogisticsType +
           '" />' +
           "</form>"
       );
-
+       
       $("body").append(form);
       form.submit();
+    
     },
+   
   },
-});
+};
 </script>

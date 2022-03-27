@@ -22,8 +22,15 @@
           <li class="nav-item">
             <router-link class="nav-link" to="/Shopcart">購物車</router-link>
           </li>
+        
           <li class="nav-item">
-            <router-link class="nav-link" to="/test">test</router-link>
+            <router-link class="nav-link" to="/question">常見問題</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/order">訂單查詢</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/form">討論區</router-link>
           </li>
         </ul>
 

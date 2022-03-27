@@ -17,7 +17,7 @@ const routes = [
       nav: () => import('../views/adm/header.vue'),
       default: () => import('../views/adm/index.vue'),
     },
-    
+
     children: [
       {
         path: "product",
@@ -65,7 +65,46 @@ const routes = [
       nav: () => import('../components/header.vue'),
     }
   },
-
+  {
+    path: '/question/',
+    name: 'Question',
+    components: {
+      default: () => import('../views/qa.vue'),
+      nav: () => import('../components/header.vue'),
+    }
+  },
+  {
+    path: '/success/',
+    name: 'Success',
+    components: {
+      default: () => import('../views/success.vue'),
+      nav: () => import('../components/header.vue'),
+    }
+  },
+  {
+    path: '/failed/',
+    name: 'Failed',
+    components: {
+      default: () => import('../views/failed.vue'),
+      nav: () => import('../components/header.vue'),
+    }
+  },
+  {
+    path: '/order/',
+    name: 'Order',
+    components: {
+      default: () => import('../views/order.vue'),
+      nav: () => import('../components/header.vue'),
+    }
+  },
+  {
+    path: '/form/',
+    name: 'Form',
+    components: {
+      default: () => import('../views/Form.vue'),
+      nav: () => import('../components/header.vue'),
+    }
+  },
   {
     path: '/userinfo',
     name: 'userinfo',
@@ -95,6 +134,13 @@ const routes = [
     name: 'cvs_get',
     components: {
       default: () => import('../views/cvs_get.vue'),
+    }
+  },
+  {
+    path: '/table',
+    name: 'Table',
+    components: {
+      nav: () => import('../views/table.vue'),
     }
   },
   {

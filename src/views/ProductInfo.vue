@@ -6,7 +6,7 @@
           <img
             style="max-width: 280px"
             class="img-responsive d-block mx-auto"
-            v-bind:src="productdata.product_img"
+            v-bind:src="product_img"
           />
         </div>
 
@@ -28,23 +28,21 @@
         </div>
       </div>
       <div class="col-md-4 col-xl-6 vertical-center">
-        <n-card ti v-bind:title="productdata.product_name">
+        <n-card ti v-bind:title="product_name">
           <template #header-extra> </template>
           規格
           <n-select
             v-model:value="selopt"
             placeholder="規格"
-            :options="productdata.opt"
+            :options="opt"
+            :on-update:value="updateopt"
           />
 
           數量
-          <n-select
-            v-model:value="selnum"
-            placeholder="請選擇數量"
-            :options="productdata.num"
-          />
+          <n-input-number v-model:value="selnum" max="50" clearable />
+
           <span class="align-left" style="color: red; font-size: 30px"
-            >NT${{ productdata.product_price }}</span
+            >NT${{ product_price }}</span
           >
 
           <template #footer
@@ -79,7 +77,7 @@
     <n-tabs default-value="oasis" justify-content="space-evenly" type="line">
       <n-tab-pane name="oasis" tab="商品描述">
         <div class="container" id="product_describe">
-          <div class="row" v-html="productdata.product_describe"></div>
+          <div class="row" v-html="product_describe"></div>
         </div>
       </n-tab-pane>
       <n-tab-pane name="the beatles" tab="配送說明"> Hey Jude </n-tab-pane>
@@ -117,18 +115,16 @@ export default defineComponent({
   },
   data() {
     return {
-      productdata: {
-        product_imglist: [],
-        product_name: "",
-        product_price: "30",
-        product_count: "",
-        product_img: "",
-        product_describe: "",
-        num: [],
-        opt: [],
-        selnum: "", //使用者選擇數量
-        selopt: "", // 使用者選擇規則
-      },
+      product_imglist: [],
+      product_name: "",
+      product_price: "",
+      product_count: "",
+      product_img: "",
+      product_describe: "",
+      num: [],
+      opt: [],
+      selnum: ref(null), //使用者選擇數量
+      selopt: ref(null), // 使用者選擇規則
     };
   },
   mounted() {
@@ -145,17 +141,27 @@ export default defineComponent({
       })
       .then((ret) => {
         this.product_id = ret.productdata.product_id;
-        this.productdata.product_name = ret.productdata.product_name;
-        this.productdata.product_price = ret.productdata.product_price;
-        this.productdata.product_img = ret.productdata.product_img[0].src;
-        this.productdata.product_describe = ret.productdata.product_describe;
-        this.productdata.opt = ret.productdata.opt;
-        this.productdata.num = ret.productdata.num;
+        this.product_name = ret.productdata.product_name;
+        this.product_price = ret.productdata.product_price;
+        this.product_img = ret.productdata.product_img[0].src;
+        this.product_describe = ret.productdata.product_describe;
+        this.opt = ret.productdata.opt;
         this.product_imglist = ret.productdata.product_img;
       });
     console.log($("img"));
   },
   methods: {
+    updateopt(v) {
+      this.selopt = v;
+      console.log(v);
+      axios.get("http://localhost/api/getproductprice/" + v, {}).then((res) => {
+        if (res.data.Status == "Success") {
+          this.selnum = null;
+          this.num = res.data.productdata.opt;
+          this.product_price = res.data.price;
+        }
+      });
+    },
     buyitem() {
       const isLogin = localStorage.getItem("account");
 
@@ -179,7 +185,7 @@ export default defineComponent({
     },
     clicking($event) {
       //商品圖片列表點擊
-      this.productdata.product_img = $event.currentTarget.src;
+      this.product_img = $event.currentTarget.src;
     },
     addtocard() {
       const isLogin = localStorage.getItem("account");
@@ -187,7 +193,6 @@ export default defineComponent({
         window.$message.error("您尚未登入");
         return;
       }
-      
       const formData = new FormData();
       formData.append("product_id", this.product_id);
       formData.append("selopt", this.selopt);

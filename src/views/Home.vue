@@ -124,7 +124,6 @@ export default defineComponent({
         this.bannerimg = ret.bannerimg;
         this.productlist = ret.productlist;
         this.totalpage = ret.page;
-        console.log(ret.productlist.length);
         var data = [];
         for (var j = 0; j < ret.productlist.length; j++) {
           data.push(this.productlist[j]);

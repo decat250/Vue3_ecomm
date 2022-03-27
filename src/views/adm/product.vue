@@ -9,24 +9,68 @@
   >
     新增商品
   </n-button>
-  <table class="table table-hover table-bordered" id="example">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>名稱</th>
-        <th>價格</th>
-        <th>數量</th>
-        <th>操作</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <vue-good-table
+    ref="my-table"
+    :search-options="{ enabled: true }"
+    :columns="columns"
+    :rows="rows"
+    :paginate="true"
+    :lineNumbers="true"
+    :globalSearch="true"
+    :pagination-options="{
+      enabled: true,
+      mode: 'records',
+      perPage: 20,
+      position: 'top',
+      perPageDropdown: [5, 10, 20],
+      dropdownAllowAll: false,
+      setCurrentPage: 2,
+      jumpFirstOrLast: true,
+      firstLabel: '第一頁',
+      lastLabel: '最後一頁',
+      nextLabel: '下一頁',
+      prevLabel: '上一頁',
+      rowsPerPageLabel: '每頁顯示項目',
+      ofLabel: 'of',
+      pageLabel: 'page',
+      allLabel: 'All',
+      infoFn: (params) => `目前頁數 ${params.firstRecordOnPage}`,
+    }"
+    @on-selected-rows-change="selectionChanged"
+    :select-options="{
+      enabled: true,
+    }"
+  >
+    >
+    <template #selected-row-actions>
+      <n-button type="primary" style="margin-right: 10px" v-on:click="test">
+        刪除所選商品
+      </n-button>
+    </template>
+
+    <template #table-row="props">
+      <span v-if="props.column.field == 'edit'">
+        <n-button
+          type="primary"
+          style="margin-right: 10px"
+          v-on:click="edit(props.row.id)"
+        >
+          編輯商品
+        </n-button>
+        <n-button type="primary" v-on:click="del(props.row.id)">
+          刪除
+        </n-button>
+      </span>
+      <span v-else>
+        {{ props.formattedRow[props.column.field] }}
+      </span>
+    </template>
+  </vue-good-table>
   <n-button
     id="deletebtn"
     style="display: None"
     @click="showDeleteModalRef = true"
-    >123</n-button
-  >
+  ></n-button>
   <n-modal v-model:show="showModal">
     <n-card
       style="width: 600px"
@@ -45,30 +89,35 @@
             type=""
           />
         </n-form-item>
-        {{ fileList }}
-        <div class="row">
-          <n-form-item class="col-6" path="" label="價格">
-            <n-input-number
-              v-model:value="product_price"
-              placeholder="請輸入商品價格"
-              clearable
-            />
-          </n-form-item>
 
-          <n-form-item class="col-6" path="product_count" label="數量">
-            <n-input-number
-              placeholder="請輸入商品數量"
-              v-model:value="product_count"
-              clearable
-            />
-          </n-form-item>
-        </div>
         <n-dynamic-input
-          v-model:value="option"
-          placeholder="輸入商品規格"
-          :min="1"
-          :max="6"
-        />
+          v-model:value="opt"
+          :on-create="onCreate"
+          style="margin-top: 20px"
+        >
+          <template #create-button-default> Add whatever you want </template>
+          <template #default="{ value }">
+            <div style="display: flex; align-items: center; width: 100%">
+              
+              <n-input-number
+                placeholder="輸入價格"
+                v-model:value="value.price"
+                style="margin-right: 12px; width: 180px"
+                min=1
+              >
+                <template #prefix> $ </template>
+              </n-input-number>
+        
+              <n-input
+                placeholder="輸入規格"
+                v-model:value="value.string"
+                type="text"
+                style="margin-right: 12px; width: 180px"
+                
+              />
+            </div>
+          </template>
+        </n-dynamic-input>
         <hr />
         照片上傳<br />
         <input
@@ -172,11 +221,12 @@ import { VueEditor } from "vue3-editor";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "jquery/dist/jquery.min.js";
-import "datatables.net-dt/js/dataTables.dataTables";
-import "datatables.net-dt/css/jquery.dataTables.min.css";
-import $ from "jquery";
+//import $ from "jquery";
+import { VueGoodTable } from "vue-good-table-next";
+import "vue-good-table-next/dist/vue-good-table-next.css";
+
 export default defineComponent({
-  components: { VueEditor },
+  components: { VueEditor, VueGoodTable },
 
   setup() {
     const formRef = ref(null);
@@ -184,6 +234,18 @@ export default defineComponent({
     const modelRef = ref({});
 
     return {
+      opt: ref([
+        {
+          price: "",
+          string: "",
+        },
+      ]),
+      onCreate() {
+        return {
+          price: "",
+          string: "",
+        };
+      },
       showModal: ref(false),
       showDeleteModalRef: ref(false),
       pagination: { pageSize: 10 },
@@ -195,81 +257,68 @@ export default defineComponent({
   },
   data() {
     return {
-      productlist: [],
       preview: "",
       image_list: [],
       preview_list: [],
-      option: [""],
-      product_count: 0,
-      product_price: 0,
       product_name: "1",
       product_describe: "",
-
       editid: 0,
       mod: 0, //0 新增 1 修改
+      columns: [
+        {
+          label: "名稱",
+          field: "name",
+        },
+        {
+          label: "價格",
+          field: "price",
+          type: "number",
+        },
+        {
+          label: "編輯商品",
+          field: "edit",
+        },
+      ],
+      rows: [],
     };
   },
   mounted() {
-    var table = $("#example").DataTable({
-      ajax: "http://localhost/api/productadmgetlist",
-      columnDefs: [
-        {
-          targets: [0],
-          visible: false,
-        },
-        {
-          targets: [1],
-        },
-        {
-          targets: [2],
-        },
-        {
-          targets: [3],
-        },
-        {
-          targets: [4],
-          defaultContent:
-            "<button id='edit'>編輯</button><button id='del'>刪除</button>",
-        },
-      ],
-    });
-    let proxy = this;
-    $("#example tbody").on("click", "button", function () {
+    this.load();
+  },
+  methods: {
+    test() {
+      console.log(this.$refs["my-table"].selectedRows);
+    },
+    load() {
+      axios.get("http://localhost/api/productadmgetlist", {}).then((res) => {
+        this.rows = res.data.data;
+      });
+    },
+    del(id) {
+      document.getElementById("deletebtn").click();
+      this.editid = id;
+    },
+    edit(id) {
       this.image_list = [];
       this.preview_list = [];
-      this.product_count = 0;
       this.product_name = "";
       this.product_describe = "";
       this.product_price = 0;
-      var data = table.row($(this).parents("tr")).data();
-      if ($(this).attr("id") == "del") {
-        document.getElementById("deletebtn").click();
-        proxy.editid = data[0];
-      } else {
-        proxy.showModal = true;
-        proxy.mod = 1;
-        axios
-          .get("http://127.0.0.1/api/getproductinfo/" + data[0], {})
-          .then((res) => {
-            proxy.product_name = res.data.productdata.product_name;
-            proxy.product_price = res.data.productdata.product_price;
-            proxy.product_count = res.data.productdata.product_count;
-            proxy.product_describe = res.data.productdata.product_describe;
-            proxy.option = res.data.productdata.optadm;
-            proxy.editid = data[0];
+      this.showModal = true;
+      this.mod = 1;
+      axios.get("http://127.0.0.1/api/getproductinfo/" + id, {}).then((res) => {
+        console.log(res.data.productdata.opt)
+        this.product_name = res.data.productdata.product_name;
+        this.product_describe = res.data.productdata.product_describe;
+        this.opt = res.data.productdata.optad;
+        this.editid = id;
+        for (var i = 0; i < res.data.productdata.product_img.length; i++) {
+          this.getfileimg(res.data.productdata.product_img[i].src);
+        }
+      });
+    },
 
-            for (var i = 0; i < res.data.productdata.product_img.length; i++) {
-              proxy.getfileimg(res.data.productdata.product_img[i].src);
-            }
-          });
-      }
-      //console.log(data[0] + "'s salary is: " + data[2]);
-    });
-  },
-  methods: {
     onPositiveClick() {
-      //window.$message.success("submit");
-      //console.log(proxy.editid);
       const formData = new FormData();
       formData.append("deleteid", this.editid);
       axios
@@ -277,10 +326,14 @@ export default defineComponent({
         .then((res) => {
           if (res.data.Status == "Success") {
             window.$message.success(res.data.Message);
-            $("#example").DataTable().ajax.reload();
+
             this.showDeleteModalRef = false;
           }
         });
+      this.load();
+      axios.get("http://localhost/api/productadmgetlist", {}).then((res) => {
+        this.rows = res.data.data;
+      });
     },
     onNegativeClick() {
       this.showDeleteModalRef = false;
@@ -291,8 +344,6 @@ export default defineComponent({
       this.image_list.splice(index, 1);
     },
     previewMultiImage: function (event) {
-      //this.imagesArray = event.target.files;
-
       var input = event.target;
       var count = input.files.length;
       var index = 0;
@@ -331,12 +382,11 @@ export default defineComponent({
         console.log(this.image_list[i]);
         formData.append("file[]", this.image_list[i]);
       }
+    
       formData.append("id", this.editid);
-      formData.append("opt", this.option);
-      formData.append("product_count", this.product_count);
+      formData.append("opt", JSON.stringify(this.opt));
       formData.append("product_name", this.product_name);
       formData.append("product_describe", this.product_describe);
-      formData.append("product_price", this.product_price);
       if (this.mod == 0) {
         axios
           .post("http://localhost/api/newproduct", formData, {})
@@ -348,10 +398,13 @@ export default defineComponent({
               this.product_count = 0;
               this.product_name = "";
               this.product_describe = "";
-              this.product_price = 0;
               this.product_img = [];
               window.$message.success(res.data.Message);
-              $("#example").DataTable().ajax.reload();
+              axios
+                .get("http://localhost/api/productadmgetlist", {})
+                .then((res) => {
+                  this.rows = res.data.data;
+                });
             }
           });
       } else {
@@ -360,9 +413,12 @@ export default defineComponent({
           .then((res) => {
             if (res.data.Status == "Success") {
               this.showModal = false;
-
               window.$message.success(res.data.Message);
-              $("#example").DataTable().ajax.reload();
+              axios
+                .get("http://localhost/api/productadmgetlist", {})
+                .then((res) => {
+                  this.rows = res.data.data;
+                });
             }
           });
       }

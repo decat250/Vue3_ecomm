@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # https://ithelp.ithome.com.tw/articles/10202886
+from audioop import add
 from datetime import datetime
 import imp
 from flask_cors import CORS
@@ -24,6 +25,7 @@ from database.api import sendvaildresetpwd
 from database.api import pwdreset
 from database.api import productgetlist
 from database.api import infogetproduct
+from database.api import pricegetproduct
 from database.api import imgbanner
 from database.api import productnew
 from database.api import newproductimg
@@ -40,6 +42,10 @@ from database.api import new_type
 from database.api import change_type
 from database.api import typecont_get
 from database.api import typecont_change
+from database.api import shopcartcountchange
+from database.api import creatorder
+from database.api import orderget
+from database.api import updatestatus
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -168,18 +174,24 @@ def getproductinfo(id):
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
+@app.route('/api/getproductprice/<id>', methods=['GET'])  #商品頁取得價格
+def getproductprice(id): 
+    try:
+        r = pricegetproduct(id)
+        return r
+
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
 
 @app.route('/api/newproduct', methods=['GET', 'POST'])
 def newproduct():
     if request.method == 'POST':
-        opt = request.form["opt"].split(",")
+        opt = request.form["opt"]
         product_name = request.form['product_name']
-        product_count = request.form['product_count']
         product_describe = request.form['product_describe']
-        product_price = request.form['product_price']
-
-        r = productnew(product_name, product_count,
-                       product_price, product_describe, opt)
+        r = productnew(product_name,
+                       product_describe, opt)
         lastid = r["lastid"]
 
         path = app.config['UPLOAD_FOLDER']+"/product/"+str(lastid)
@@ -267,15 +279,13 @@ def createRandomString(len):
 @app.route('/api/editproduct', methods=['GET', 'POST'])  # 編輯商品
 def editproduct():
     if request.method == 'POST':
-        opt = request.form["opt"].split(",")
+        opt = request.form["opt"]
         product_name = request.form['product_name']
-        product_count = request.form['product_count']
         product_describe = request.form['product_describe']
-        product_price = request.form['product_price']
         id = request.form['id']
 
-        r = productedit(id, product_name, product_count,
-                        product_price, product_describe, opt)
+        r = productedit(id, product_name,
+                         product_describe, opt)
         lastid = id
 
         deletefolder = glob.glob(path+"/product/"+str(lastid)+"/*")
@@ -314,6 +324,15 @@ def getshopcart(userid):
         r = shopcartget(userid)
         return r
 
+@app.route('/api/changeshopcartcount', methods=['GET', 'POST'])  # 修改購物車數量項目
+def changeshopcartcount():
+    
+    if request.method == 'POST':
+        print(request.form['id'])
+        id = request.form['id']
+        count = request.form['count']
+        r = shopcartcountchange(id,count)
+        return {"Status":r}
 
 @app.route('/api/delcart', methods=['GET', 'POST'])  # banner照片編輯
 def delcart():
@@ -330,17 +349,23 @@ def pay():
     userid = request.form['userid']
     print(userid)
     import time
-    date = time.time()
-    tid = str(date) + 'Uid' + str(userid)
-    print(tid)
-    print(request.form['name'])
-    print(request.form['phone'])
-    print(request.form['address'])
-    print(request.form['ordermark'])
+    date =time.strftime('%Y-%m-%d %H:%M:%S')
+
+    #tid = str(date) + 'Uid' + str(userid)
+    #print(tid)
+    name = request.form['name']
+    phone = request.form['phone']
+    address = request.form['address']
+    ordermark = request.form['ordermark']
 
     
     TotalAmount = request.form['TotalAmount']
     ItemName = request.form['ItemName']
+    Logistics = request.form['Logistics']
+    print("itemname = "+ItemName)
+    print(userid,date,name,phone,Logistics,address,TotalAmount,ordermark)
+    r = creatorder(userid,date,name,phone,Logistics,address,TotalAmount,ordermark)
+    print(r)
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "ecpay_payment_sdk",
@@ -357,19 +382,19 @@ def pay():
         'TotalAmount': TotalAmount,
         'TradeDesc': '訂單測試',
         'ItemName': ItemName,
-        'ReturnURL': 'http://127.0.0.1/test',
+        'ReturnURL': 'http://127.0.0.1/api/getorderresult',
         'ChoosePayment': 'ALL',
         'ClientBackURL': 'http://localhost:8080/#/',
         'ItemURL': 'https://www.ecpay.com.tw/item_url.php',
         'Remark': '交易備註',
         'ChooseSubPayment': '',
-        'OrderResultURL': 'http://127.0.0.1/test',
+        'OrderResultURL': 'http://127.0.0.1/api/getorderresult',
         'NeedExtraPaidInfo': 'Y',
         'DeviceSource': '',
         'IgnorePayment': '',
         'PlatformID': '',
         'InvoiceMark': 'N',
-        'CustomField1': '',
+        'CustomField1': str(r) , #order id
         'CustomField2': '',
         'CustomField3': '',
         'CustomField4': '',
@@ -455,6 +480,19 @@ def pay():
     except Exception as error:
         print('An exception happened: ' + str(error))
 
+@app.route('/api/getorderresult', methods=['GET', 'POST'])
+def getorderresult():
+    orderid = request.form['CustomField1']
+    RtnCode = request.form['RtnCode'] #1為交易成功
+    print(RtnCode)
+    if (RtnCode == 1):
+        updatestatus(orderid)
+        return redirect("http://localhost:8080/#/success")
+    else:
+        return redirect("http://localhost:8080/#/failed")
+
+    #print(orderid)
+    #print(RtnCode)
 
 @app.route('/api/cvs/<LogisticsSubType>', methods=['GET', 'POST'])
 def cvs(LogisticsSubType):
@@ -632,6 +670,13 @@ def csv_home():
     except Exception as error:
         print('An exception happened: ' + str(error))
 
+@app.route('/api/getorder/<userid>', methods=['GET', 'POST']) #取得訂單狀態
+def getorder(userid):
+    try:
+        r = orderget(userid)
+        return {"Status": "Success", "data": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
 
 if __name__ == '__main__':
 
