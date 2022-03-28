@@ -487,9 +487,10 @@ def pay():
 def getorderresult():
     orderid = request.form['CustomField1']
     RtnCode = request.form['RtnCode']  # 1為交易成功
-
+    PaymentDate = request.form['PaymentDate'] #交易時間
+    PaymentType =request.form['PaymentType'] #付款方式
     if (RtnCode == "1"):
-        updatestatus(orderid)
+        updatestatus(orderid,PaymentDate,PaymentType)
         return redirect("http://localhost:8080/#/success")
     else:
         return redirect("http://localhost:8080/#/failed")

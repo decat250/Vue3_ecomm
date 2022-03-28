@@ -888,7 +888,7 @@ export default {
       }
       this.item="test"
       console.log(order_LogisticsType)
-      var url = "http://localhost/api/reorder";
+      var url = "http://localhost/api/pay";
       var form = $(
         '<form style="display:none" action="' +
           url +

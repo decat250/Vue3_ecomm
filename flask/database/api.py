@@ -494,9 +494,8 @@ def orderget(userid):
         data.append(temp)
     return data
 
-def updatestatus(orderid): #付款完成更新狀態
-    print("update `tb_order` set order_state='已付款' where order_id = '"+str(orderid)+"'")
-    db.engine.execute("update `tb_order` set order_state='已付款' where order_id = '"+str(orderid)+"'")
+def updatestatus(orderid,PaymentDate,PaymentType): #付款完成更新狀態
+    db.engine.execute("update `tb_order` set order_state='已付款' ,PaymentDate='"+str(PaymentDate)+"' ,PaymentType='"+str(PaymentType)+"' where order_id = '"+str(orderid)+"'")
     return "success"
 
 def orderre(order_id): #付款失敗重新付款
@@ -504,5 +503,4 @@ def orderre(order_id): #付款失敗重新付款
     total=0
     for i in item:
         total=i[7]
-    
     return total

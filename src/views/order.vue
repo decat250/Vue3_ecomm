@@ -18,7 +18,7 @@
           >
             付款
           </n-button>
-          <n-button type="primary" v-on:click="pay(props.row.id)">
+          <n-button type="primary" >
             訂單資訊
           </n-button>
         </span>
