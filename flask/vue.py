@@ -14,6 +14,7 @@ import datetime
 from flask import Flask, request, jsonify, redirect, flash, url_for, render_template
 from flask_restful import Api, Resource, reqparse, abort
 import importlib.util
+import time
 
 # 我把api的處理都放在database/database.py 用來建立連線
 from database.database import app as application
@@ -46,6 +47,9 @@ from database.api import shopcartcountchange
 from database.api import creatorder
 from database.api import orderget
 from database.api import updatestatus
+from database.api import orderre
+
+
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -57,9 +61,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 CORS(app, resources={r'/*': {'origins': '*'}})
 
+
+
 # API
-
-
 @app.route("/api/signin", methods=['POST'])
 def signin():
     post_data = request.get_json()
@@ -174,8 +178,9 @@ def getproductinfo(id):
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
-@app.route('/api/getproductprice/<id>', methods=['GET'])  #商品頁取得價格
-def getproductprice(id): 
+
+@app.route('/api/getproductprice/<id>', methods=['GET'])  # 商品頁取得價格
+def getproductprice(id):
     try:
         r = pricegetproduct(id)
         return r
@@ -285,7 +290,7 @@ def editproduct():
         id = request.form['id']
 
         r = productedit(id, product_name,
-                         product_describe, opt)
+                        product_describe, opt)
         lastid = id
 
         deletefolder = glob.glob(path+"/product/"+str(lastid)+"/*")
@@ -324,15 +329,17 @@ def getshopcart(userid):
         r = shopcartget(userid)
         return r
 
+
 @app.route('/api/changeshopcartcount', methods=['GET', 'POST'])  # 修改購物車數量項目
 def changeshopcartcount():
-    
+
     if request.method == 'POST':
         print(request.form['id'])
         id = request.form['id']
         count = request.form['count']
-        r = shopcartcountchange(id,count)
-        return {"Status":r}
+        r = shopcartcountchange(id, count)
+        return {"Status": r}
+
 
 @app.route('/api/delcart', methods=['GET', 'POST'])  # banner照片編輯
 def delcart():
@@ -347,25 +354,20 @@ def delcart():
 @app.route('/api/pay', methods=['GET', 'POST'])
 def pay():
     userid = request.form['userid']
-    print(userid)
-    import time
-    date =time.strftime('%Y-%m-%d %H:%M:%S')
+    date = time.strftime('%Y-%m-%d %H:%M:%S')
 
-    #tid = str(date) + 'Uid' + str(userid)
-    #print(tid)
     name = request.form['name']
     phone = request.form['phone']
     address = request.form['address']
     ordermark = request.form['ordermark']
 
-    
     TotalAmount = request.form['TotalAmount']
     ItemName = request.form['ItemName']
     Logistics = request.form['Logistics']
-    print("itemname = "+ItemName)
-    print(userid,date,name,phone,Logistics,address,TotalAmount,ordermark)
-    r = creatorder(userid,date,name,phone,Logistics,address,TotalAmount,ordermark)
-    print(r)
+   
+    orderid = creatorder(userid, date, name, phone, Logistics,
+                   address, TotalAmount, ordermark)
+           
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         "ecpay_payment_sdk",
@@ -394,7 +396,7 @@ def pay():
         'IgnorePayment': '',
         'PlatformID': '',
         'InvoiceMark': 'N',
-        'CustomField1': str(r) , #order id
+        'CustomField1': str(orderid),  # order id
         'CustomField2': '',
         'CustomField3': '',
         'CustomField4': '',
@@ -480,24 +482,25 @@ def pay():
     except Exception as error:
         print('An exception happened: ' + str(error))
 
+
 @app.route('/api/getorderresult', methods=['GET', 'POST'])
 def getorderresult():
     orderid = request.form['CustomField1']
-    RtnCode = request.form['RtnCode'] #1為交易成功
-    print(RtnCode)
-    if (RtnCode == 1):
+    RtnCode = request.form['RtnCode']  # 1為交易成功
+
+    if (RtnCode == "1"):
         updatestatus(orderid)
         return redirect("http://localhost:8080/#/success")
     else:
         return redirect("http://localhost:8080/#/failed")
 
-    #print(orderid)
-    #print(RtnCode)
+    # print(orderid)
+    # print(RtnCode)
+
 
 @app.route('/api/cvs/<LogisticsSubType>', methods=['GET', 'POST'])
 def cvs(LogisticsSubType):
-
-    import importlib.util
+    # 物流環境
     spec = importlib.util.spec_from_file_location(
         "ecpay_logistic_sdk",
         "/Users/decat/Vue3_ecomm/flask/ecpay_logistic_sdk.py"
@@ -537,7 +540,8 @@ def cvs(LogisticsSubType):
     except Exception as error:
         print('An exception happened: ' + str(error))
 
-@app.route('/api/type_get', methods=['GET', 'POST']) #標籤管理＿取得標籤
+
+@app.route('/api/type_get', methods=['GET', 'POST'])  # 標籤管理＿取得標籤
 def type_get():
     try:
         r = get_type()
@@ -545,7 +549,8 @@ def type_get():
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
-@app.route('/api/type_del', methods=['GET', 'POST'])  #標籤管理）刪除標籤
+
+@app.route('/api/type_del', methods=['GET', 'POST'])  # 標籤管理）刪除標籤
 def type_del():
     typeid = request.form['typeid']
     try:
@@ -553,8 +558,9 @@ def type_del():
         return {"Status": "Success", "Message": r}
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
-        
-@app.route('/api/type_new', methods=['GET', 'POST'])  #標籤管理 新增標籤
+
+
+@app.route('/api/type_new', methods=['GET', 'POST'])  # 標籤管理 新增標籤
 def type_new():
     type = request.form['type']
     try:
@@ -563,18 +569,20 @@ def type_new():
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
-@app.route('/api/type_change', methods=['GET', 'POST'])  #標籤管理 變更標籤
+
+@app.route('/api/type_change', methods=['GET', 'POST'])  # 標籤管理 變更標籤
 def type_change():
     typeid = request.form['typeid']
     type = request.form['type']
 
     try:
-        r = change_type(typeid,type)
+        r = change_type(typeid, type)
         return {"Status": "Success", "Message": r}
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
-@app.route('/api/get_typecont', methods=['GET', 'POST'])  #標籤管理 取得標籤內商品
+
+@app.route('/api/get_typecont', methods=['GET', 'POST'])  # 標籤管理 取得標籤內商品
 def get_typecont():
     typeid = request.form['typeid']
     try:
@@ -583,16 +591,18 @@ def get_typecont():
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
-@app.route('/api/change_typecont', methods=['GET', 'POST'])  #標籤管理 變更標籤內商品
+
+@app.route('/api/change_typecont', methods=['GET', 'POST'])  # 標籤管理 變更標籤內商品
 def change_typecont():
     typeid = request.form['typeid']
     productlist = request.form['productlist']
-    data=productlist.split(",")
+    data = productlist.split(",")
     try:
-        r = typecont_change(typeid,data)
+        r = typecont_change(typeid, data)
         return {"Status": "Success", "Message": r}
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
+
 
 @app.route('/api/cvs_get', methods=['GET', 'POST'])
 def cvs_get():
@@ -670,13 +680,136 @@ def csv_home():
     except Exception as error:
         print('An exception happened: ' + str(error))
 
-@app.route('/api/getorder/<userid>', methods=['GET', 'POST']) #取得訂單狀態
+
+@app.route('/api/getorder/<userid>', methods=['GET', 'POST'])  # 取得訂單狀態
 def getorder(userid):
     try:
         r = orderget(userid)
         return {"Status": "Success", "data": r}
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
+
+
+@app.route('/api/reorder', methods=['GET', 'POST'])  # 付款失敗重新付款
+def reorder():
+    order_id = request.form['order_id']
+    print(order_id)
+    data = orderre(order_id)
+    print(data)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "ecpay_payment_sdk",
+        "/Users/decat/Vue3_ecomm/flask/ecpay_payment_sdk.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    order_params = {
+        'MerchantTradeNo': datetime.datetime.now().strftime("NO%Y%m%d%H%M%S"),
+        'StoreID': '',
+        'MerchantTradeDate': datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
+        'PaymentType': 'aio',
+        'TotalAmount': data,
+        'TradeDesc': '訂單測試',
+        'ItemName': "ItemName",
+        'ReturnURL': 'http://127.0.0.1/api/getorderresult',
+        'ChoosePayment': 'ALL',
+        'ClientBackURL': 'http://localhost:8080/#/',
+        'ItemURL': 'https://www.ecpay.com.tw/item_url.php',
+        'Remark': '交易備註',
+        'ChooseSubPayment': '',
+        'OrderResultURL': 'http://127.0.0.1/api/getorderresult',
+        'NeedExtraPaidInfo': 'Y',
+        'DeviceSource': '',
+        'IgnorePayment': '',
+        'PlatformID': '',
+        'InvoiceMark': 'N',
+        'CustomField1': str(order_id),  # order id
+        'CustomField2': '',
+        'CustomField3': '',
+        'CustomField4': '',
+        'EncryptType': 1,
+    }
+
+    extend_params_1 = {
+        'ExpireDate': 7,
+        'PaymentInfoURL': 'https://www.ecpay.com.tw/payment_info_url.php',
+        'ClientRedirectURL': '',
+    }
+
+    extend_params_2 = {
+        'StoreExpireDate': 15,
+        'Desc_1': '',
+        'Desc_2': '',
+        'Desc_3': '',
+        'Desc_4': '',
+        'PaymentInfoURL': 'https://www.ecpay.com.tw/payment_info_url.php',
+        'ClientRedirectURL': '',
+    }
+
+    extend_params_3 = {
+        'BindingCard': 0,
+        'MerchantMemberID': '',
+    }
+
+    extend_params_4 = {
+        'Redeem': 'N',
+        'UnionPay': 0,
+    }
+
+    inv_params = {
+        # 'RelateNumber': 'Tea0001', # 特店自訂編號
+        # 'CustomerID': 'TEA_0000001', # 客戶編號
+        # 'CustomerIdentifier': '53348111', # 統一編號
+        # 'CustomerName': '客戶名稱',
+        # 'CustomerAddr': '客戶地址',
+        # 'CustomerPhone': '0912345678', # 客戶手機號碼
+        # 'CustomerEmail': 'abc@ecpay.com.tw',
+        # 'ClearanceMark': '2', # 通關方式
+        # 'TaxType': '1', # 課稅類別
+        # 'CarruerType': '', # 載具類別
+        # 'CarruerNum': '', # 載具編號
+        # 'Donation': '1', # 捐贈註記
+        # 'LoveCode': '168001', # 捐贈碼
+        # 'Print': '1',
+        # 'InvoiceItemName': '測試商品1|測試商品2',
+        # 'InvoiceItemCount': '2|3',
+        # 'InvoiceItemWord': '個|包',
+        # 'InvoiceItemPrice': '35|10',
+        # 'InvoiceItemTaxType': '1|1',
+        # 'InvoiceRemark': '測試商品1的說明|測試商品2的說明',
+        # 'DelayDay': '0', # 延遲天數
+        # 'InvType': '07', # 字軌類別
+    }
+
+    # 建立實體
+    ecpay_payment_sdk = module.ECPayPaymentSdk(
+        MerchantID='2000132',
+        HashKey='5294y06JbISpM5x9',
+        HashIV='v77hoKGq4kWxNNIS'
+    )
+
+    # 合併延伸參數
+    order_params.update(extend_params_1)
+    order_params.update(extend_params_2)
+    order_params.update(extend_params_3)
+    order_params.update(extend_params_4)
+
+    # 合併發票參數
+    order_params.update(inv_params)
+
+    try:
+        # 產生綠界訂單所需參數
+        final_order_params = ecpay_payment_sdk.create_order(order_params)
+
+        # 產生 html 的 form 格式
+        action_url = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5'  # 測試環境
+        html = ecpay_payment_sdk.gen_html_post_form(
+            action_url, final_order_params)
+        return (html)
+    except Exception as error:
+        print('An exception happened: ' + str(error))
+    
 
 if __name__ == '__main__':
 

@@ -485,6 +485,7 @@ def orderget(userid):
     order = db.engine.execute("select * from `tb_order` where user_id='"+str(userid)+"'")
     for i in order:
         temp={}
+        temp["order_id"] = i[0]
         temp["order_time"] = i[2]
         temp['user_name'] = i[3]
         temp['order_LogisticsType'] = i[5]
@@ -497,3 +498,11 @@ def updatestatus(orderid): #付款完成更新狀態
     print("update `tb_order` set order_state='已付款' where order_id = '"+str(orderid)+"'")
     db.engine.execute("update `tb_order` set order_state='已付款' where order_id = '"+str(orderid)+"'")
     return "success"
+
+def orderre(order_id): #付款失敗重新付款
+    item = db.engine.execute("select * from `tb_order` where order_id='"+str(order_id)+"'")
+    total=0
+    for i in item:
+        total=i[7]
+    
+    return total
