@@ -69,7 +69,7 @@
     </div>
   </nav>
 
-  <n-modal v-model:show="showLoginModal" content="Are you sure?">
+  <n-modal v-model:show="showLoginModal" >
     <n-card
       style="width: 600px"
       title=""

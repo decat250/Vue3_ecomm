@@ -48,7 +48,7 @@ from database.api import creatorder
 from database.api import orderget
 from database.api import updatestatus
 from database.api import orderre
-
+from database.api import item_getorder
 
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
@@ -686,6 +686,7 @@ def csv_home():
 def getorder(userid):
     try:
         r = orderget(userid)
+        print(r)
         return {"Status": "Success", "data": r}
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
@@ -811,6 +812,16 @@ def reorder():
     except Exception as error:
         print('An exception happened: ' + str(error))
     
+
+@app.route('/api/getorder_item', methods=['GET', 'POST'])  # 取得訂單內容
+def getorder_item():
+    order_id = request.form['order_id']
+    try:
+        r = item_getorder(order_id)
+        return {"Status": "Success", "data": r[0],'count':r[1],'custom':r[2]}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
 
 if __name__ == '__main__':
 

@@ -11,6 +11,8 @@ from sqlalchemy import create_engine, and_, exc, Integer, ForeignKey, String, Co
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql.expression import case
 import json
+import time
+
 # 從database/model引入所有class，包含與DB的映對(Mapping)關係
 from database.model import *
 
@@ -469,7 +471,7 @@ def typecont_change(typeid, data):  # 取得標籤內商品內容
     return "修改成功"
 
 def creatorder(userid,date,name,phone,Logistics,address,TotalAmount,ordermark):
-    db.engine.execute("insert into `tb_order` (user_id,order_time,user_name,user_phone,order_LogisticsType,order_address,order_total,order_mark,order_state) values ("+str(userid)+",'"+str(date)+"','"+str(name)+"','"+str(phone)+"','"+str(Logistics)+"','"+str(address)+"','"+str(TotalAmount)+"','"+str(ordermark)+"','代付款')")
+    db.engine.execute("insert into `tb_order` (user_id,order_time,user_name,user_phone,order_LogisticsType,order_address,order_total,order_mark,order_state) values ("+str(userid)+",'"+str(date)+"','"+str(name)+"','"+str(phone)+"','"+str(Logistics)+"','"+str(address)+"','"+str(TotalAmount)+"','"+str(ordermark)+"','待付款')")
     orderid = db.engine.execute("select max(order_id) from `tb_order`")
     lastorderid=0
     for i in orderid:
@@ -486,7 +488,7 @@ def orderget(userid):
     for i in order:
         temp={}
         temp["order_id"] = i[0]
-        temp["order_time"] = i[2]
+        temp["order_time"] = str(i[2])
         temp['user_name'] = i[3]
         temp['order_LogisticsType'] = i[5]
         temp['order_total'] = i[7]
@@ -504,3 +506,33 @@ def orderre(order_id): #付款失敗重新付款
     for i in item:
         total=i[7]
     return total
+
+def item_getorder(order_id):
+    order = db.engine.execute("select * from `tb_orderitem` where order_id='"+str(order_id)+"'")
+    data=[]
+    total=0
+    for i in order:
+        temp={}
+        temp['product_name'] = i[2]
+        temp['product_opt_item']=i[3]
+        temp['item_count']=i[5]
+        temp['item_price']=i[4]
+        temp['item_total']="$"+str(int(i[4])*int(i[5]))
+        total+=int(i[4])*int(i[5])
+        data.append(temp)
+    custom={}
+    customsq = db.engine.execute("select * from `tb_order` where order_id='"+str(order_id)+"'")
+    for i in customsq:
+        custom['user_name']=i[3]
+        custom['user_phone']=i[4]
+        custom['order_mark']= str(i[8])
+        custom['order_time']= str(i[2])
+        custom['order_LogisticsType']= str(i[5])
+        custom['order_address']= str(i[6])
+        custom['order_status']= str(i[9])
+
+        custom['PaymentDate']= str(i[10])
+        if (str(i[11]) == "Credit_CreditCard"):
+            custom['PaymentType']= "信用卡"
+
+    return data,total,custom

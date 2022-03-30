@@ -303,6 +303,7 @@ export default {
     };
   },
   mounted() {
+    console.log(document.referrer)
     const isLogin = localStorage.getItem("account");
 
     if (isLogin != null) {

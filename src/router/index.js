@@ -82,6 +82,14 @@ const routes = [
     }
   },
   {
+    path: '/order_item/:id',
+    name: 'order_item',
+    components: {
+      default: () => import('../views/order_item.vue'),
+      nav: () => import('../components/header.vue'),
+    }
+  },
+  {
     path: '/failed/',
     name: 'Failed',
     components: {

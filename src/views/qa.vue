@@ -1,33 +1,55 @@
 <template>
-  <div class="container"><n-collapse>
-    <n-collapse-item title="" name="1">
-      <div>good</div>
-    </n-collapse-item>
-    <n-collapse-item title="right" name="2">
-      <div>nice</div>
-    </n-collapse-item>
-    <n-collapse-item title="right" name="3">
-      <div>very good</div>
-    </n-collapse-item>
-  </n-collapse></div>
+  <n-form ref="formRef" :model="model" :rules="rules">
+    <n-form-item path="age" label="Age">
+      <n-input v-model:value="model.age" @keydown.enter.prevent />
+    </n-form-item>
+    
+    <n-button round type="primary" @click="handleValidateButtonClick">
+      Validate
+    </n-button>
+  </n-form>
+
+  <pre
+    >{{ JSON.stringify(model, null, 2) }}
+</pre
+  >
 </template>
-<style>
-.testimonial-group > .row {
-  display: block;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-.testimonial-group > .row > .col-4 {
-  display: inline-block;
-}
 
-.vertical-center {
-  min-height: 100%; /* Fallback for browsers do NOT support vh unit */
-
-  display: flex;
-  align-items: center;
-}
-</style>
 <script>
+import { defineComponent, ref } from "vue";
+import { useMessage } from "naive-ui";
 
+export default defineComponent({
+  setup() {
+    const formRef = ref(null);
+    const message = useMessage();
+    const modelRef = ref({
+      age: null,
+    });
+    const rules = {
+      age: [
+        {
+          required: true,
+          trigger: ["input", "blur"],
+        },
+      ],
+    };
+    return {
+      formRef,
+      model: modelRef,
+      rules,
+      handleValidateButtonClick(e) {
+        e.preventDefault();
+        formRef.value?.validate((errors) => {
+          if (!errors) {
+            message.success("Valid");
+          } else {
+            console.log(errors);
+            message.error("Invalid");
+          }
+        });
+      },
+    };
+  },
+});
 </script>
