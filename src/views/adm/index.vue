@@ -49,6 +49,10 @@ const menuOptions = [
     label: "商品類別管理",
     key: "type",
   },
+  {
+    label: "訂單管理",
+    key: "orderadm",
+  },
 ];
 
 export default defineComponent({

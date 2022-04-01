@@ -471,7 +471,7 @@ def typecont_change(typeid, data):  # 取得標籤內商品內容
     return "修改成功"
 
 def creatorder(userid,date,name,phone,Logistics,address,TotalAmount,ordermark):
-    db.engine.execute("insert into `tb_order` (user_id,order_time,user_name,user_phone,order_LogisticsType,order_address,order_total,order_mark,order_state) values ("+str(userid)+",'"+str(date)+"','"+str(name)+"','"+str(phone)+"','"+str(Logistics)+"','"+str(address)+"','"+str(TotalAmount)+"','"+str(ordermark)+"','待付款')")
+    db.engine.execute("insert into `tb_order` (user_id,order_time,user_name,user_phone,order_LogisticsType,order_address,order_total,order_mark,order_state,logistics_state) values ("+str(userid)+",'"+str(date)+"','"+str(name)+"','"+str(phone)+"','"+str(Logistics)+"','"+str(address)+"','"+str(TotalAmount)+"','"+str(ordermark)+"','待付款','待出貨')")
     orderid = db.engine.execute("select max(order_id) from `tb_order`")
     lastorderid=0
     for i in orderid:
@@ -493,6 +493,22 @@ def orderget(userid):
         temp['order_LogisticsType'] = i[5]
         temp['order_total'] = i[7]
         temp['status'] = i[9]
+        temp['logistics_state'] = i[12]
+        data.append(temp)
+    return data
+
+def orderget_adm():
+    data=[]
+    order = db.engine.execute("select * from `tb_order`")
+    for i in order:
+        temp={}
+        temp["order_id"] = i[0]
+        temp["order_time"] = str(i[2])
+        temp['user_name'] = i[3]
+        temp['order_LogisticsType'] = i[5]
+        temp['order_total'] = i[7]
+        temp['status'] = i[9]
+        temp['logistics_state'] = i[12]
         data.append(temp)
     return data
 
@@ -536,3 +552,11 @@ def item_getorder(order_id):
             custom['PaymentType']= "信用卡"
 
     return data,total,custom
+
+def update_logistics(order_id,status): #訂單物流狀態更新
+    db.engine.execute("update `tb_order` set logistics_state='"+str(status)+"' where order_id ='"+str(order_id)+"'")
+    return "訂單修改完成"
+
+def update_orderstatus(order_id,status):
+    db.engine.execute("update `tb_order` set order_state='"+str(status)+"' where order_id ='"+str(order_id)+"'")
+    return "訂單修改完成"

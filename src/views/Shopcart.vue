@@ -19,7 +19,6 @@
           <span v-if="props.column.field == 'count'">
             <n-input-number
               min="1"
-              max="50"
               v-model:max="props.row.maxcount"
               v-model:value="props.row.count"
               @update:value="counthandleChange(props.row.id, props.row.count)"

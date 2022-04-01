@@ -1,35 +1,33 @@
 <template>
-  <n-button @click="showModal = true">
-    Start Me up
-  </n-button>
-  <n-modal v-model:show="showModal">
-    <n-card
-      style="width: 600px"
-      title="Modal"
-      :bordered="false"
-      size="huge"
-      role="dialog"
-      aria-modal="true"
-    >
-      <template #header-extra>
-        Oops!
-      </template>
-      Content
-      <template #footer>
-        Footer
-      </template>
-    </n-card>
-  </n-modal>
+  <div class="container">
+    <div class="row">
+      <n-alert style="margin-top: 30px" title="請推薦免費的網路空間" type="default" v-on:click="test">
+        <template #icon>
+          <n-icon>
+            hh
+          </n-icon>
+        </template>
+        decat 
+      </n-alert>
+      
+    </div>
+  </div>
 </template>
 
 <script>
-import { defineComponent, ref } from "vue";
+import { defineComponent } from "vue";
+//import { useMessage } from "naive-ui";
 
 export default defineComponent({
   setup() {
-    return {
-      showModal: ref(false)
-    };
+    return {};
+  },
+  methods:
+  {
+    test()
+    {
+      console.log("2")
+    }
   }
 });
 </script>

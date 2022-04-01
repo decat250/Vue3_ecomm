@@ -76,11 +76,18 @@ export default defineComponent({
           globalSearchDisabled: true,
         },
         {
+          label: "出貨狀態",
+          field: "logistics_state",
+          tdClass: "text-center",
+          globalSearchDisabled: true,
+        },
+        {
           label: "詳細資訊",
           field: "edit",
           tdClass: "text-center",
           globalSearchDisabled: true,
         },
+        
       ],
       rows: [],
     };

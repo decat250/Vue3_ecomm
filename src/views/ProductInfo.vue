@@ -245,7 +245,6 @@ export default defineComponent({
                 //$("#example").DataTable().ajax.reload();
               }
             });
-          window.$message.success("Valid");
         } else {
           return;
         }

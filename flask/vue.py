@@ -49,7 +49,9 @@ from database.api import orderget
 from database.api import updatestatus
 from database.api import orderre
 from database.api import item_getorder
-
+from database.api import orderget_adm
+from database.api import update_logistics
+from database.api import update_orderstatus
 # app = Flask(__name__)#database.database裡面有定義app了，再寫會錯誤
 import glob
 # 這就是app名稱
@@ -550,6 +552,25 @@ def type_get():
     except Exception as e:
         return {"Status": "Failed", "Return": str(e)}
 
+@app.route('/api/logistics_update', methods=['GET', 'POST'])  # 更新訂單物流狀態
+def logistics_update():
+    try:
+        order_id = request.form['order_id']
+        status = request.form['status']
+        r = update_logistics(order_id,status)
+        return {"Status": "Success", "Message": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/orderstatus_update', methods=['GET', 'POST'])  # 更新訂單物流狀態
+def orderstatus_update():
+    try:
+        order_id = request.form['order_id']
+        status = request.form['status']
+        r = update_orderstatus(order_id,status)
+        return {"Status": "Success", "Message": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
 
 @app.route('/api/type_del', methods=['GET', 'POST'])  # 標籤管理）刪除標籤
 def type_del():
@@ -686,6 +707,15 @@ def csv_home():
 def getorder(userid):
     try:
         r = orderget(userid)
+        print(r)
+        return {"Status": "Success", "data": r}
+    except Exception as e:
+        return {"Status": "Failed", "Return": str(e)}
+
+@app.route('/api/getorderadm', methods=['GET', 'POST'])  # 取得訂單狀態
+def getorderadm():
+    try:
+        r = orderget_adm()
         print(r)
         return {"Status": "Success", "data": r}
     except Exception as e:

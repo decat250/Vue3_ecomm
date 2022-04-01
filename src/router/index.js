@@ -35,6 +35,14 @@ const routes = [
         path: "type",
         component: () => import("../views/adm/type.vue")
       },
+      {
+        path: "orderadm",
+        component: () => import("../views/adm/orderadm.vue")
+      },
+      {
+        path: "order_itemadm/:id",
+        component: () => import("../views/adm/order_itemadm.vue")
+      },
     ]
   },
   {
